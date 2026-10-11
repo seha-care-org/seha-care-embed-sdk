@@ -9,6 +9,7 @@ import {
   ChangeDetectorRef,
   inject,
   Input,
+  HostListener,
   OnChanges,
   Output,
   Renderer2,
@@ -43,6 +44,8 @@ export interface EmbedSessionLabels {
   startingButton: string;
   loadingStatus: string;
   errorMessage: string;
+  expandFullscreenButton: string;
+  exitFullscreenButton: string;
 }
 
 export interface EmbedSessionStartedEvent {
@@ -59,12 +62,20 @@ const DEFAULT_LABELS: EmbedSessionLabels = {
   startingButton: "Starting session…",
   loadingStatus: "Creating your private session link…",
   errorMessage: "Could not start the session. Please try again.",
+  expandFullscreenButton: "Expand consultation to full screen",
+  exitFullscreenButton: "Exit full screen",
 };
 
 const IFRAME_STYLES = [
   ":host{container-type:inline-size;display:block;width:100%;max-width:66.25rem;margin-inline:auto}",
+  ".seha-embed-session-frame-shell{position:relative;width:100%;max-width:66.25rem;margin-inline:auto}",
   "iframe{display:block;width:100%;height:auto;aspect-ratio:3/4;border:0;border-radius:1rem}",
   "@container (min-width:48rem){iframe{aspect-ratio:4/3;border-radius:1.25rem}}",
+  ".seha-embed-session__fullscreen-button{position:absolute;z-index:2;inset-block-start:.75rem;inset-inline-end:.75rem;display:grid;width:2.75rem;height:2.75rem;place-items:center;padding:0;border:1px solid rgb(255 255 255 / 62%);border-radius:.75rem;background:rgb(14 31 29 / 82%);color:#fff;font:inherit;font-size:1.625rem;line-height:1;cursor:pointer;backdrop-filter:blur(.5rem)}",
+  ".seha-embed-session__fullscreen-button:hover{background:rgb(14 31 29 / 96%)}",
+  ".seha-embed-session__fullscreen-button:focus-visible{outline:3px solid #58c7a8;outline-offset:3px}",
+  ".seha-embed-session-frame-shell--fullscreen-fallback,.seha-embed-session-frame-shell:fullscreen{position:fixed!important;z-index:2147483647;inset:0!important;width:100vw!important;max-width:none!important;height:100vh!important;height:100dvh!important;margin:0!important;overflow:auto;background:#000}",
+  ".seha-embed-session-frame-shell--fullscreen-fallback iframe,.seha-embed-session-frame-shell:fullscreen iframe{width:100%!important;height:100%!important;aspect-ratio:auto!important;border-radius:0!important}",
 ];
 
 const SESSION_STYLES = [
@@ -85,22 +96,29 @@ const SESSION_STYLES = [
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template:
-    '<iframe #frame [src]="safeUrl" [attr.title]="title" allow="camera; microphone; autoplay" allowfullscreen referrerpolicy="no-referrer" loading="eager" [attr.id]="id" [class]="className" [ngStyle]="iframeStyles" (load)="frameLoad.emit($event)"></iframe>',
+    '<div #shell class="seha-embed-session-frame-shell" [class.seha-embed-session-frame-shell--fullscreen-fallback]="isFullscreenFallback"><iframe #frame [src]="safeUrl" [attr.title]="title" allow="camera; microphone; autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer" loading="eager" [attr.id]="id" [class]="className" [ngStyle]="iframeStyles" (load)="frameLoad.emit($event)"></iframe><button #fullscreenButton class="seha-embed-session__fullscreen-button" type="button" [attr.aria-label]="isFullscreen ? exitFullscreenLabel : expandFullscreenLabel" [attr.aria-pressed]="isFullscreen" [attr.title]="isFullscreen ? exitFullscreenLabel : expandFullscreenLabel" (click)="toggleFullscreen()"><span aria-hidden="true">{{ isFullscreen ? "×" : "⛶" }}</span></button></div>',
   styles: IFRAME_STYLES,
 })
 export class EmbedSessionFrameComponent implements AfterViewInit, OnChanges {
   @ViewChild("frame", { static: true }) private frame: ElementRef<HTMLIFrameElement> | undefined;
+  @ViewChild("shell", { static: true }) private shell: ElementRef<HTMLDivElement> | undefined;
+  @ViewChild("fullscreenButton", { static: true }) private fullscreenButton: ElementRef<HTMLButtonElement> | undefined;
   @Input({ required: true }) sessionUrl = "";
   @Input() title = "Seha Care consultation";
-  @Input() allow = "camera; microphone; autoplay";
+  @Input() allow = "camera; microphone; autoplay; fullscreen";
   @Input() id: string | undefined;
   @Input() iframeStyles: Record<string, string | number> = {};
   @Input() className = "";
+  @Input() expandFullscreenLabel = DEFAULT_LABELS.expandFullscreenButton;
+  @Input() exitFullscreenLabel = DEFAULT_LABELS.exitFullscreenButton;
   @Output() readonly frameLoad = new EventEmitter<Event>();
 
   safeUrl: SafeResourceUrl | null = null;
+  isFullscreen = false;
+  isFullscreenFallback = false;
 
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly document = inject(DOCUMENT);
   private readonly renderer = inject(Renderer2);
 
   ngOnChanges(_changes: SimpleChanges): void {
@@ -118,6 +136,49 @@ export class EmbedSessionFrameComponent implements AfterViewInit, OnChanges {
   private applyAllowPolicy(): void {
     if (this.frame) this.renderer.setAttribute(this.frame.nativeElement, "allow", this.allow);
   }
+
+  @HostListener("document:fullscreenchange")
+  syncFullscreenState(): void {
+    this.isFullscreen =
+      this.isFullscreenFallback || this.document.fullscreenElement === this.shell?.nativeElement;
+  }
+
+  @HostListener("document:keydown", ["$event"])
+  handleEscape(event: KeyboardEvent): void {
+    if (event.key !== "Escape" || !this.isFullscreenFallback) return;
+    this.isFullscreenFallback = false;
+    this.isFullscreen = false;
+    this.fullscreenButton?.nativeElement.focus();
+  }
+
+  async toggleFullscreen(): Promise<void> {
+    const shell = this.shell?.nativeElement;
+    if (!shell) return;
+
+    if (this.document.fullscreenElement === shell) {
+      await this.document.exitFullscreen().catch(() => undefined);
+      return;
+    }
+
+    if (this.isFullscreenFallback) {
+      this.isFullscreenFallback = false;
+      this.isFullscreen = false;
+      this.fullscreenButton?.nativeElement.focus();
+      return;
+    }
+
+    if (this.document.fullscreenEnabled && shell.requestFullscreen) {
+      try {
+        await shell.requestFullscreen();
+        return;
+      } catch {
+        // Use a viewport-sized overlay when the browser blocks native fullscreen.
+      }
+    }
+
+    this.isFullscreenFallback = true;
+    this.isFullscreen = true;
+  }
 }
 
 @Component({
@@ -133,6 +194,8 @@ export class EmbedSessionFrameComponent implements AfterViewInit, OnChanges {
           [sessionUrl]="sessionUrl"
           [title]="iframeTitle"
           [allow]="iframeAllow"
+          [expandFullscreenLabel]="resolvedLabels.expandFullscreenButton"
+          [exitFullscreenLabel]="resolvedLabels.exitFullscreenButton"
           [id]="iframeId"
           [iframeStyles]="iframeStyles"
         />
@@ -187,7 +250,7 @@ export class EmbedSessionComponent {
   @Input() labels: Partial<EmbedSessionLabels> = {};
   @Input() className = "";
   @Input() iframeTitle = "Seha Care consultation";
-  @Input() iframeAllow = "camera; microphone; autoplay";
+  @Input() iframeAllow = "camera; microphone; autoplay; fullscreen";
   @Input() iframeId: string | undefined;
   @Input() iframeStyles: Record<string, string | number> = {};
   @Input() inputStyles: Record<string, string | number> = {};

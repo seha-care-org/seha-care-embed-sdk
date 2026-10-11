@@ -80,7 +80,7 @@ describe("Angular embed components", () => {
     const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
     expect(iframe).toHaveAttribute("src", sessionUrl);
     expect(iframe).toHaveAttribute("title", "Seha Care consultation");
-    expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay");
+    expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay; fullscreen");
     expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
     expect(iframe).toHaveStyle({ width: "100%", height: "auto" });
     expect(fixture.nativeElement.firstElementChild).toHaveClass("host-widget");
@@ -179,10 +179,28 @@ describe("Angular embed components", () => {
     expect(frameFixture.componentInstance.safeUrl).toBe(trustedUrl);
     const iframe = frameFixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
     expect(iframe).toHaveAttribute("src", sessionUrl);
-    expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay");
+    expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay; fullscreen");
     expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
     expect(iframe).toHaveAttribute("loading", "eager");
     expect(iframe).toHaveAttribute("allowfullscreen");
+    const expandButton = frameFixture.nativeElement.querySelector(
+      ".seha-embed-session__fullscreen-button",
+    ) as HTMLButtonElement;
+    expect(expandButton).toHaveAttribute(
+      "aria-label",
+      "Expand consultation to full screen",
+    );
+    expandButton.click();
+    frameFixture.detectChanges();
+    expect(frameFixture.nativeElement.firstElementChild).toHaveClass(
+      "seha-embed-session-frame-shell--fullscreen-fallback",
+    );
+    expect(expandButton).toHaveAttribute("aria-label", "Exit full screen");
+    expandButton.click();
+    frameFixture.detectChanges();
+    expect(frameFixture.nativeElement.firstElementChild).not.toHaveClass(
+      "seha-embed-session-frame-shell--fullscreen-fallback",
+    );
     frameFixture.componentRef.setInput("allow", "camera; microphone; autoplay; fullscreen");
     frameFixture.componentRef.setInput("title", "Host consultation");
     frameFixture.componentRef.setInput("id", "host-frame");
