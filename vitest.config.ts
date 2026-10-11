@@ -8,6 +8,8 @@ export default defineConfig({
     environment: "jsdom",
     restoreMocks: true,
     clearMocks: true,
+    fileParallelism: false,
+    maxWorkers: 1,
     setupFiles: ["./tests/setup.ts", "./tests/angular-test-setup.ts"],
     exclude: ["examples/**", "**/node_modules/**", "**/dist/**", "**/coverage/**"],
   },
