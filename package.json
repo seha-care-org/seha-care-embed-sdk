@@ -1,7 +1,7 @@
 {
   "name": "@seha-care/embed-sdk",
   "version": "0.1.0",
-  "description": "Browser and server clients plus a React iframe component for Seha Care embedded sessions.",
+  "description": "Secure server and browser clients, plus React, Next.js, and Angular components for Seha Care embedded sessions.",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -16,7 +16,8 @@
     "./server": {
       "types": "./dist/server/index.d.ts",
       "browser": null,
-      "node": "./dist/server/index.js",
+      "import": "./dist/server/index.js",
+      "require": "./dist/server/index.cjs",
       "default": "./dist/server/index.js"
     },
     "./client": {
@@ -26,40 +27,79 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
+    },
+    "./nextjs": {
+      "types": "./dist/nextjs/index.d.ts",
+      "react-server": "./dist/nextjs/index.js",
+      "browser": null,
+      "default": "./dist/nextjs/index.js"
+    },
+    "./angular": {
+      "types": "./dist/angular/types/seha-care-embed-sdk-angular.d.ts",
+      "import": "./dist/angular/fesm2022/seha-care-embed-sdk-angular.mjs"
     }
   },
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "@angular/common": "^21.0.0 || ^22.0.0",
+    "@angular/core": "^21.0.0 || ^22.0.0",
+    "@angular/platform-browser": "^21.0.0 || ^22.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "server-only": "^0.0.1"
   },
   "peerDependenciesMeta": {
+    "@angular/common": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "@angular/platform-browser": {
+      "optional": true
+    },
     "react": {
+      "optional": true
+    },
+    "server-only": {
       "optional": true
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.build.json && node scripts/build-frameworks.mjs",
     "typecheck": "tsc --noEmit",
+    "pretest": "npm run build",
     "test": "vitest run",
+    "check:server-formats": "node scripts/check-server-formats.mjs",
     "check:server-examples": "node scripts/smoke-server-examples.mjs",
-    "verify": "npm run typecheck && npm run test && npm run build",
+    "verify": "npm run typecheck && npm test && npm run check:server-formats",
     "prepack": "npm run build",
     "prepublishOnly": "npm run verify",
     "pack:check": "npm pack --dry-run"
   },
   "devDependencies": {
+    "@angular/common": "^21.1.0",
+    "@angular/compiler-cli": "^21.1.0",
+    "@angular/core": "^21.1.0",
+    "@angular/platform-browser": "^21.1.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20.19.43",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.0",
     "jsdom": "^29.1.1",
+    "ng-packagr": "^21.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "rxjs": "^7.8.2",
+    "tslib": "^2.8.1",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "zone.js": "^0.16.3"
   }
 }
