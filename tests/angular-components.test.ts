@@ -172,8 +172,11 @@ describe("Angular embed components", () => {
 
   it("validates iframe URLs before trusting them and preserves iframe defaults", () => {
     const frameFixture = TestBed.createComponent(EmbedSessionFrameComponentClass);
-    frameFixture.componentInstance.sessionUrl = sessionUrl;
+    frameFixture.componentRef.setInput("sessionUrl", sessionUrl);
     frameFixture.detectChanges();
+    const trustedUrl = frameFixture.componentInstance.safeUrl;
+    frameFixture.detectChanges();
+    expect(frameFixture.componentInstance.safeUrl).toBe(trustedUrl);
     const iframe = frameFixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
     expect(iframe).toHaveAttribute("src", sessionUrl);
     expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay");
@@ -196,7 +199,7 @@ describe("Angular embed components", () => {
     frameFixture.destroy();
 
     const unsafeFixture = TestBed.createComponent(EmbedSessionFrameComponentClass);
-    unsafeFixture.componentInstance.sessionUrl = "javascript:alert(1)";
+    unsafeFixture.componentRef.setInput("sessionUrl", "javascript:alert(1)");
     expect(() => unsafeFixture.detectChanges()).toThrow("absolute HTTP or HTTPS URL");
     unsafeFixture.destroy();
   });

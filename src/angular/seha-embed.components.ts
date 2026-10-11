@@ -62,19 +62,22 @@ const DEFAULT_LABELS: EmbedSessionLabels = {
 };
 
 const IFRAME_STYLES = [
-  ":host{display:block;width:100%;height:100%;min-height:32rem}",
-  "iframe{display:block;width:100%;height:100%;border:0}",
+  ":host{display:block;width:100%;height:min(85vh,60rem);min-height:35rem}",
+  "iframe{display:block;width:100%;height:100%;min-height:35rem;border:0}",
+  "@media (max-width:35rem){:host{height:82vh;min-height:35rem}}",
 ];
 
 const SESSION_STYLES = [
-  ":host{display:block;width:100%;height:100%;min-height:32rem}",
-  ".seha-embed-session{width:100%;height:100%;min-height:32rem}",
+  ":host{display:block;width:100%;height:100%;min-height:35rem}",
+  ".seha-embed-session{width:100%;height:100%;min-height:35rem}",
+  ".seha-embed-session--active{width:100%;max-width:66.25rem;height:min(85vh,60rem);min-height:35rem;padding:0;overflow:hidden;border-radius:1.25rem;background:#fff}",
   ".seha-embed-session__form{display:flex;flex-direction:column;gap:.875rem;max-width:32rem;margin-inline:auto;padding:1.25rem}",
   ".seha-embed-session__heading,.seha-embed-session__description{margin:0}",
   ".seha-embed-session__input,.seha-embed-session__button{font:inherit;padding:.75rem;border-radius:.5rem}",
   ".seha-embed-session__button{cursor:pointer}",
-  ".seha-embed-session__frame{display:block;width:100%;height:100%;min-height:32rem;border:0}",
+  ".seha-embed-session__frame{display:block;width:100%;height:100%;min-height:35rem;border:0}",
   ".seha-embed-session__error{color:#a52828}",
+  "@media (max-width:35rem){.seha-embed-session--active{height:82vh;min-height:35rem;padding:0;border-radius:1rem}}",
 ];
 
 @Component({
@@ -96,20 +99,21 @@ export class EmbedSessionFrameComponent implements AfterViewInit, OnChanges {
   @Input() className = "";
   @Output() readonly frameLoad = new EventEmitter<Event>();
 
+  safeUrl: SafeResourceUrl | null = null;
+
   private readonly sanitizer = inject(DomSanitizer);
   private readonly renderer = inject(Renderer2);
 
   ngOnChanges(_changes: SimpleChanges): void {
+    if (_changes["sessionUrl"]) {
+      const validatedUrl = assertHttpUrl(this.sessionUrl);
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(validatedUrl);
+    }
     this.applyAllowPolicy();
   }
 
   ngAfterViewInit(): void {
     this.applyAllowPolicy();
-  }
-
-  get safeUrl(): SafeResourceUrl {
-    const validatedUrl = assertHttpUrl(this.sessionUrl);
-    return this.sanitizer.bypassSecurityTrustResourceUrl(validatedUrl);
   }
 
   private applyAllowPolicy(): void {
