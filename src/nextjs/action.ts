@@ -1,5 +1,3 @@
-"use server";
-
 import "server-only";
 
 import process from "node:process";
@@ -14,7 +12,7 @@ export type BeforeStartAction = (
   options: StartEmbeddedSessionRequest,
 ) => void | Promise<void>;
 
-export async function startEmbeddedSessionAction(
+export async function executeStartEmbeddedSession(
   beforeStartAction: BeforeStartAction | undefined,
   untrustedOptions: StartEmbeddedSessionRequest,
 ): Promise<StartEmbeddedSessionResponse> {
