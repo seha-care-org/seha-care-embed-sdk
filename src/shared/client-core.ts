@@ -1,7 +1,7 @@
 import {
   DEFAULT_SESSION_ENDPOINT,
-  validateStartSessionOptions,
-  type StartEmbeddedSessionOptions,
+  validateBrowserSessionRequest,
+  type BrowserStartEmbeddedSessionOptions,
   type StartEmbeddedSessionResponse,
 } from "./types.js";
 
@@ -19,19 +19,18 @@ export class EmbeddedSessionRequestError extends Error {
 
 export async function requestBrowserSession(
   endpoint: string,
-  options: StartEmbeddedSessionOptions = {},
+  options: BrowserStartEmbeddedSessionOptions = {},
 ): Promise<StartEmbeddedSessionResponse> {
   if (typeof globalThis.fetch !== "function") {
     throw new TypeError("A fetch implementation is required");
   }
 
-  const { signal, ...requestOptions } = options;
-  const body = validateStartSessionOptions(requestOptions);
+  const { signal, headers, body } = validateBrowserSessionRequest(options);
   const response = await globalThis.fetch(endpoint, {
     method: "POST",
     cache: "no-store",
     credentials: "same-origin",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify(body),
     signal,
   });

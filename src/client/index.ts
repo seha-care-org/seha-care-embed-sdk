@@ -4,13 +4,14 @@ import {
   requestBrowserSession,
 } from "../shared/client-core.js";
 import type {
-  StartEmbeddedSessionOptions,
+  BrowserStartEmbeddedSessionOptions,
   StartEmbeddedSessionResponse,
 } from "../shared/types.js";
 
 export { EmbeddedSessionRequestError } from "../shared/client-core.js";
 export type {
   ArabicDialect,
+  BrowserStartEmbeddedSessionOptions,
   EmbeddedAgent,
   StartEmbeddedSessionOptions,
   StartEmbeddedSessionRequest,
@@ -26,7 +27,7 @@ export class SehaCareEmbedClient {
   }
 
   startSession(
-    options: StartEmbeddedSessionOptions = {},
+    options: BrowserStartEmbeddedSessionOptions = {},
   ): Promise<StartEmbeddedSessionResponse> {
     return requestBrowserSession(this.endpoint, options);
   }
