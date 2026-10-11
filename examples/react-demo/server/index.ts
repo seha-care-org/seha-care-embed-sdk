@@ -24,8 +24,7 @@ app.post("/api/seha-care/session", async (request, response) => {
 
   try {
     const client = new SehaCareEmbedClient(
-      process.env.SEHA_TENANT_API_KEY ?? "",
-      { apiBaseUrl: process.env.SEHA_API_BASE_URL },
+      process.env.SEHA_TENANT_API_KEY ?? ""
     );
     response.status(201).json(await client.startSession(options));
   } catch (error) {

@@ -9,7 +9,7 @@ const clientAssets = assetNames
 
 for (const file of [join(process.cwd(), "dist", "index.html"), ...clientAssets.map((name) => join(outputDirectory, name))]) {
   const asset = await readFile(file, "utf8");
-  if (/SEHA_TENANT_API_KEY|x-tenant-api-key|SEHA_API_BASE_URL/.test(asset)) {
+  if (/SEHA_TENANT_API_KEY|x-tenant-api-key/.test(asset)) {
     throw new Error("Server-side Seha Care configuration was found in a browser asset.");
   }
 }

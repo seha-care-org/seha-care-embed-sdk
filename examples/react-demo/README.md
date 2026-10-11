@@ -21,7 +21,6 @@ Copy-Item .env.example .env
 Edit `.env` with server-only values:
 
 ```dotenv
-SEHA_API_BASE_URL=https://demo.seha-care.com
 SEHA_TENANT_API_KEY=replace-with-your-tenant-api-key
 PORT=4174
 ```
