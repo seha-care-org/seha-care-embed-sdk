@@ -14,13 +14,14 @@
 
 Runnable projects are in [Next.js](examples/nextjs-app/README.md), [React + Express](examples/react-demo/README.md), [Angular + NestJS](examples/angular-nest/README.md), and [plain Node.js](examples/plain-node/README.md).
 
-Managed components and SDK iframe components size themselves to their available width, capped at 66.25rem (1060px). They use a 3:4 portrait frame below 48rem (768px) and a 4:3 landscape frame from 48rem upward. This uses the embed's width, so an iframe in a narrow desktop panel stays portrait. Content inside the frame scrolls naturally when it is taller than the available viewport; the host page keeps its normal scrolling behavior.
+Managed components and SDK iframe components size themselves to their available width, capped at 66.25rem (1060px). They use a 3:4 portrait frame below 48rem (768px) and a 4:3 landscape frame from 48rem upward. This uses the embed's width, so an iframe in a narrow desktop panel stays portrait. Every SDK iframe component includes an accessible expand/exit full screen button. It uses browser fullscreen when available and a viewport-sized fallback otherwise; Escape exits the fallback. The iframe document and host page retain normal scrolling.
 
 For a plain iframe, place it in a sizing wrapper and use the same aspect-ratio rule:
 
 ```css
 .consultation-frame-shell {
   container-type: inline-size;
+  position: relative;
   width: min(100%, 66.25rem);
 }
 
@@ -207,6 +208,8 @@ export function ExistingSession({ sessionUrl }: { sessionUrl: string }) {
 
 The iframe responds to the width of its parent and grows or shrinks to its responsive aspect ratio. Existing explicit iframe dimensions remain available through `iframeProps.style`. The managed component accepts `sessionEndpoint`, identity/agent/dialect/language settings, translated `labels`, root `className`/`style`, `iframeProps`, `onSessionStarted`, and `onError`.
 
+The frame button's accessible label defaults to English. Set `labels.expandFullscreenButton` and `labels.exitFullscreenButton` to localize it, or use `iframeProps.expandFullscreenLabel` and `iframeProps.exitFullscreenLabel` for an existing session frame. Fullscreen permission is included by default in the iframe's `allow` policy; a custom `iframeProps.allow` value replaces that policy.
+
 ### Angular
 
 Import the standalone components where needed:
@@ -237,7 +240,7 @@ export class ConsultationComponent {
 }
 ```
 
-`EmbedSessionComponent` supports `sessionEndpoint`, `sessionHeaders`, `sessionBody`, `userIdentity`, `initAgent`, `initDialect`, `language`, translated `labels`, CSS class and style inputs, iframe title/permissions/id/styles, and `sessionStarted`/`sessionError` outputs. Language accepts `en` or `ar`; if omitted, the tenant's configured session language applies. For example, bind `[sessionHeaders]="{ 'x-organization-context': 'clinic-12' }"` and `[sessionBody]="{ organizationContext: { bookingId: 'booking-4821' } }"`. The iframe component checks the URL before marking it safe for the browser.
+`EmbedSessionComponent` supports `sessionEndpoint`, `sessionHeaders`, `sessionBody`, `userIdentity`, `initAgent`, `initDialect`, `language`, translated `labels`, CSS class and style inputs, iframe title/permissions/id/styles, and `sessionStarted`/`sessionError` outputs. Use `labels.expandFullscreenButton` and `labels.exitFullscreenButton` to localize the frame control. Language accepts `en` or `ar`; if omitted, the tenant's configured session language applies. For example, bind `[sessionHeaders]="{ 'x-organization-context': 'clinic-12' }"` and `[sessionBody]="{ organizationContext: { bookingId: 'booking-4821' } }"`. The iframe component checks the URL before marking it safe for the browser.
 
 ## Server client and HTTP contract
 
@@ -295,7 +298,7 @@ These values go to your own `/api/seha-care/session` endpoint. Do not put secret
 
 - A session URL contains a bearer token. Give it only to the intended browser session; do not log, analyze, persist, or put it in a shareable link.
 - Do not log tenant keys, upstream error bodies, or participant information. SDK errors expose a safe status and category rather than an upstream body.
-- Allow the Seha Care origin in the host page's `frame-src` Content Security Policy. Camera and microphone use depends on HTTPS, browser permission, and iframe `allow="camera; microphone; autoplay"`.
+- Allow the Seha Care origin in the host page's `frame-src` Content Security Policy. Camera and microphone use depends on HTTPS, browser permission, and iframe `allow="camera; microphone; autoplay; fullscreen"`.
 - Server-to-server calls do not use browser CORS. Browser session-start calls should stay same-origin through the host endpoint or its development proxy.
 
 ## Migration from 0.1.x
