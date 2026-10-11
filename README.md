@@ -289,4 +289,4 @@ npm run verify
 npm run pack:check
 ```
 
-Each runnable example has its own setup and build commands in its README. After installing the React, Angular/NestJS, and plain Node examples and building NestJS, `npm run check:server-examples` exercises the Express, NestJS, and plain Node endpoints against a local mock. The React, Angular, and Next.js checks scan browser assets and source maps; the Next.js example tests ordinary requests and direct requests with missing or tampered authorization context in development and production. All automated checks use synthetic credentials and local mocks.
+Each runnable example has its own setup and build commands in its README. After installing the React, Angular/NestJS, and plain Node examples and building NestJS, `npm run check:server-examples` exercises the Express, NestJS, and plain Node endpoints against a local mock. The React and Angular checks scan browser assets and source maps. The Next.js example provides a production build and client bundle scan. Automated endpoint checks use synthetic credentials and local mocks.

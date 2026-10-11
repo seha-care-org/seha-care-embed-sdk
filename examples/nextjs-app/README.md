@@ -5,7 +5,6 @@ This App Router example uses the SDK's server `EmbedSession` component. The visi
 ## Requirements
 
 - Node.js 24 and npm 11
-- Chromium available to Playwright for the integration checks
 
 ## Install and configure
 
@@ -48,31 +47,14 @@ export function ExistingConsultation({ sessionUrl }: { sessionUrl: string }) {
 
 The `/nextjs` component returns a safe error to the browser if access is denied or the upstream request fails. Do not return credentials or upstream response bodies from a host authorization action.
 
-## Development and production integration checks
+## Production build
 
-The browser check starts a local mock Seha endpoint and uses a synthetic key to verify that:
-
-- rendering does not create a session;
-- submitting creates one session, and the browser receives no tenant key;
-- the authorization hook blocks a request before it reaches the mock endpoint;
-- the custom metadata Route Handler denies direct and malformed requests before contacting the mock endpoint;
-- an authorized custom metadata request reaches the Route Handler with its header and JSON fields;
-- an authorized request succeeds; and
-- the rendered page and browser responses do not contain the synthetic key.
-
-For development:
+Create the production build and scan its browser assets for server credentials:
 
 ```powershell
-npx playwright install chromium
-npm run test:integration:dev
-```
-
-For production, first build, then run the production check:
-
-```powershell
-npm run build:integration
+npm run build
 npm run check:bundle
-npm run test:integration
+npm start
 ```
 
-The checks use a local mock only. They do not need a real Seha Care tenant or contact a remote service.
+The bundle scan expects the production build in `.next`. `npm start` serves the app at <http://localhost:4199>.
