@@ -18,6 +18,8 @@ describe("EmbedSession", () => {
       <EmbedSession
         initAgent="triage"
         initDialect="EGY"
+        sessionHeaders={{ "X-Organization-Id": "clinic-12" }}
+        sessionBody={{ organizationContext: { bookingId: "booking-4821" } }}
         labels={{ heading: "Start care", userIdentityLabel: "Your name" }}
         className="host-root"
         style={{ maxWidth: 700 }}
@@ -47,8 +49,12 @@ describe("EmbedSession", () => {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-organization-id": "clinic-12",
+        },
         body: JSON.stringify({
+          organizationContext: { bookingId: "booking-4821" },
           userIdentity: "Demo visitor",
           initAgent: "triage",
           initDialect: "EGY",

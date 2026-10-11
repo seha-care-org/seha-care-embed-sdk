@@ -33,6 +33,8 @@ export interface EmbedSessionLabels {
 
 export interface EmbedSessionProps {
   sessionEndpoint?: string;
+  sessionHeaders?: Record<string, string>;
+  sessionBody?: Record<string, unknown>;
   startSession?: (
     options: StartEmbeddedSessionRequest,
   ) => Promise<StartEmbeddedSessionResponse>;
@@ -61,6 +63,8 @@ const DEFAULT_LABELS: EmbedSessionLabels = {
 
 export function EmbedSession({
   sessionEndpoint,
+  sessionHeaders,
+  sessionBody,
   startSession: startSessionAction,
   userIdentity,
   initAgent,
@@ -119,7 +123,12 @@ export function EmbedSession({
       };
       result = startSessionAction
         ? await startSessionAction(options)
-        : await client.startSession({ ...options, signal: controller.signal });
+        : await client.startSession({
+            ...options,
+            headers: sessionHeaders,
+            body: sessionBody,
+            signal: controller.signal,
+          });
 
     } catch (cause) {
       if (controller.signal.aborted || isAbortError(cause)) return;
