@@ -3,12 +3,15 @@ export const DEFAULT_SESSION_ENDPOINT = "/api/seha-care/session";
 
 export type EmbeddedAgent = "receptionist" | "triage" | "knowledge";
 
+export type SessionLanguage = "en" | "ar";
+
 export type ArabicDialect = "MAGHREB" | "LEV" | "MSA" | "GLF" | "EGY";
 
 export interface StartEmbeddedSessionOptions {
   userIdentity?: string;
   initAgent?: EmbeddedAgent;
   initDialect?: ArabicDialect;
+  language?: SessionLanguage;
   signal?: AbortSignal;
 }
 
@@ -33,7 +36,7 @@ export interface ValidatedBrowserSessionRequest {
   signal?: AbortSignal;
 }
 
-const SESSION_OPTION_KEYS = ["userIdentity", "initAgent", "initDialect"] as const;
+const SESSION_OPTION_KEYS = ["userIdentity", "initAgent", "initDialect", "language"] as const;
 
 /** Validate browser-only metadata and combine it with the validated session options. */
 export function validateBrowserSessionRequest(
@@ -119,7 +122,7 @@ export function validateStartSessionOptions(value: unknown): StartEmbeddedSessio
   }
 
   const options = value as Record<string, unknown>;
-  const allowedKeys = new Set(["userIdentity", "initAgent", "initDialect"]);
+  const allowedKeys = new Set(["userIdentity", "initAgent", "initDialect", "language"]);
   for (const key of Object.keys(options)) {
     if (!allowedKeys.has(key)) throw new TypeError(`Unknown session option: ${key}`);
   }
@@ -145,10 +148,14 @@ export function validateStartSessionOptions(value: unknown): StartEmbeddedSessio
   ) {
     throw new TypeError("initDialect is not supported");
   }
+  if (options.language !== undefined && options.language !== "en" && options.language !== "ar") {
+    throw new TypeError("language must be en or ar");
+  }
 
   return {
     ...(options.userIdentity !== undefined ? { userIdentity: options.userIdentity } : {}),
     ...(options.initAgent !== undefined ? { initAgent: options.initAgent } : {}),
     ...(options.initDialect !== undefined ? { initDialect: options.initDialect } : {}),
+    ...(options.language !== undefined ? { language: options.language } : {}),
   } as StartEmbeddedSessionRequest;
 }

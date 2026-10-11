@@ -28,6 +28,7 @@ describe("browser SehaCareEmbedClient", () => {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
+        redirect: "error",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ userIdentity: "visitor", initAgent: "triage" }),
       }),
@@ -44,6 +45,7 @@ describe("browser SehaCareEmbedClient", () => {
 
     await client.startSession({
       initAgent: "knowledge",
+      language: "ar",
       headers: {
         "Content-Type": "text/plain",
         "X-Organization-Id": "clinic-12",
@@ -52,6 +54,7 @@ describe("browser SehaCareEmbedClient", () => {
         organizationContext: { appointmentId: "booking-4821", tags: ["returning"] },
         initAgent: "unsupported-body-value",
         userIdentity: "body-value-must-not-override",
+        language: "en",
       },
     });
 
@@ -64,7 +67,29 @@ describe("browser SehaCareEmbedClient", () => {
     expect(JSON.parse(String(request?.body))).toEqual({
       organizationContext: { appointmentId: "booking-4821", tags: ["returning"] },
       initAgent: "knowledge",
+      language: "ar",
     });
+  });
+
+  it("strips language from custom JSON when the typed option is omitted", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ sessionUrl: "https://app.example.com/en/embed/session/token" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await new SehaCareEmbedClient().startSession({ body: { language: "en" } });
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({});
+  });
+
+  it.each(["EN", "en-US", "", null])("rejects invalid language %s before fetching", async (language) => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      new SehaCareEmbedClient().startSession({ language: language as never }),
+    ).rejects.toThrow("language must be en or ar");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it.each([null, [], "value", 42])("rejects a non-object custom body before fetching: %s", async (body) => {

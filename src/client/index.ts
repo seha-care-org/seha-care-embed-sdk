@@ -13,6 +13,7 @@ export type {
   ArabicDialect,
   BrowserStartEmbeddedSessionOptions,
   EmbeddedAgent,
+  SessionLanguage,
   StartEmbeddedSessionOptions,
   StartEmbeddedSessionRequest,
   StartEmbeddedSessionResponse,

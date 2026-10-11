@@ -11,6 +11,7 @@ export { validateStartSessionOptions } from "../shared/client-core.js";
 export type {
   ArabicDialect,
   EmbeddedAgent,
+  SessionLanguage,
   StartEmbeddedSessionOptions,
   StartEmbeddedSessionRequest,
   StartEmbeddedSessionResponse,

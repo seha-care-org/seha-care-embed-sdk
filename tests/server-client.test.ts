@@ -29,6 +29,7 @@ describe("SehaCareEmbedClient", () => {
         userIdentity: "visitor-123",
         initAgent: "knowledge",
         initDialect: "EGY",
+        language: "en",
       }),
     ).resolves.toEqual({
       sessionUrl: "https://app.example.com/en/embed/session/token",
@@ -48,6 +49,7 @@ describe("SehaCareEmbedClient", () => {
           userIdentity: "visitor-123",
           initAgent: "knowledge",
           initDialect: "EGY",
+          language: "en",
         }),
       }),
     );
@@ -64,6 +66,20 @@ describe("SehaCareEmbedClient", () => {
 
     expect(fetchMock.mock.calls[0]?.[1]?.body).toBe("{}");
   });
+
+  it.each(["EN", "en-US", "", null])(
+    "rejects invalid language %s before fetching",
+    async (language) => {
+      const fetchMock = vi.fn<typeof fetch>();
+      vi.stubGlobal("fetch", fetchMock);
+      const client = new SehaCareEmbedClient("tenant-secret-test-value");
+
+      await expect(client.startSession({ language: language as never })).rejects.toThrow(
+        "language must be en or ar",
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("reports HTTP failures without exposing response content", async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
