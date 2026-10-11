@@ -14,6 +14,29 @@
 
 Runnable projects are in [Next.js](examples/nextjs-app/README.md), [React + Express](examples/react-demo/README.md), [Angular + NestJS](examples/angular-nest/README.md), and [plain Node.js](examples/plain-node/README.md).
 
+Managed components and SDK iframe components size themselves to their available width, capped at 66.25rem (1060px). They use a 3:4 portrait frame below 48rem (768px) and a 4:3 landscape frame from 48rem upward. This uses the embed's width, so an iframe in a narrow desktop panel stays portrait. Content inside the frame scrolls naturally when it is taller than the available viewport; the host page keeps its normal scrolling behavior.
+
+For a plain iframe, place it in a sizing wrapper and use the same aspect-ratio rule:
+
+```css
+.consultation-frame-shell {
+  container-type: inline-size;
+  width: min(100%, 66.25rem);
+}
+
+.consultation-frame-shell iframe {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+}
+
+@container (min-width: 48rem) {
+  .consultation-frame-shell iframe {
+    aspect-ratio: 4 / 3;
+  }
+}
+```
+
 ## Install
 
 ```sh
@@ -48,7 +71,7 @@ import { EmbedSession } from "@seha-care/embed-sdk/nextjs";
 
 export default function ConsultationPage() {
   return (
-    <div style={{ height: "75vh", minHeight: 520 }}>
+    <div style={{ width: "100%" }}>
       <EmbedSession
         initAgent="receptionist"
         initDialect="EGY"
@@ -182,7 +205,7 @@ export function ExistingSession({ sessionUrl }: { sessionUrl: string }) {
 }
 ```
 
-The iframe fills its parent, so set the parent height. The managed component accepts `sessionEndpoint`, identity/agent/dialect/language settings, translated `labels`, root `className`/`style`, `iframeProps`, `onSessionStarted`, and `onError`.
+The iframe responds to the width of its parent and grows or shrinks to its responsive aspect ratio. Existing explicit iframe dimensions remain available through `iframeProps.style`. The managed component accepts `sessionEndpoint`, identity/agent/dialect/language settings, translated `labels`, root `className`/`style`, `iframeProps`, `onSessionStarted`, and `onError`.
 
 ### Angular
 
