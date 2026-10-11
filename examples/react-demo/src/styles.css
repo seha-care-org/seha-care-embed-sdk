@@ -1,0 +1,92 @@
+:root {
+  font-family: Inter, "Segoe UI", sans-serif;
+  color: #152b2a;
+  background: #f2f7f5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 12% 5%, rgb(143 213 190 / 22%), transparent 38%),
+    radial-gradient(ellipse at 90% 92%, rgb(190 218 211 / 30%), transparent 35%),
+    #f2f7f5;
+}
+
+.page-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  align-content: center;
+  gap: 1.5rem;
+  padding: 3rem 1.25rem;
+}
+
+.demo-intro {
+  width: min(100%, 31rem);
+}
+
+.brand-mark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 0.9375rem;
+  background: linear-gradient(145deg, #087c66, #39b495);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  box-shadow: 0 0.5rem 1.25rem rgb(17 132 109 / 22%);
+}
+
+.eyebrow {
+  margin: 1.25rem 0 0.5rem;
+  color: #238d75;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.demo-intro h1 {
+  margin: 0;
+  font-size: clamp(1.625rem, 5vw, 2.125rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.18;
+}
+
+.intro {
+  margin: 0.75rem 0 0;
+  color: #607673;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.demo-embed-session {
+  width: min(100%, 31rem);
+}
+
+.demo-error {
+  width: min(100%, 31rem);
+  margin: 0;
+  color: #a53c3c;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 35rem) {
+  .page-shell {
+    padding: 1.5rem 0.875rem;
+  }
+}
