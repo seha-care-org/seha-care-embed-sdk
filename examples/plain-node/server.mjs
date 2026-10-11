@@ -68,9 +68,7 @@ const server = createServer(async (request, response) => {
     }
 
     try {
-      const client = new SehaCareEmbedClient(process.env.SEHA_TENANT_API_KEY ?? "", {
-        apiBaseUrl: process.env.SEHA_API_BASE_URL,
-      });
+      const client = new SehaCareEmbedClient(process.env.SEHA_TENANT_API_KEY ?? "");
       const result = await client.startSession(options);
       send(response, 201, result);
     } catch (error) {

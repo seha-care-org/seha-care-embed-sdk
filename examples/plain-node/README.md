@@ -16,7 +16,7 @@ npm install
 Copy-Item .env.example .env
 ```
 
-Set `SEHA_API_BASE_URL` and `SEHA_TENANT_API_KEY` in `.env`, then run:
+Set `SEHA_TENANT_API_KEY` in `.env`, then run:
 
 ```powershell
 npm start
