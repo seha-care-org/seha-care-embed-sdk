@@ -60,6 +60,7 @@ describe("Angular embed components", () => {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
+        redirect: "error",
         headers: {
           "content-type": "application/json",
           "x-organization-id": "clinic-12",

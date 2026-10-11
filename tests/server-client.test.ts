@@ -39,6 +39,7 @@ describe("SehaCareEmbedClient", () => {
       expect.objectContaining({
         method: "POST",
         cache: "no-store",
+        redirect: "manual",
         headers: {
           "content-type": "application/json",
           "x-tenant-api-key": "tenant-secret-test-value",

@@ -47,6 +47,7 @@ export async function requestStartSession(
   const response = await globalThis.fetch(endpoint, {
     method: "POST",
     cache: "no-store",
+    redirect: "manual",
     headers: {
       "content-type": "application/json",
       "x-tenant-api-key": tenantApiKey,

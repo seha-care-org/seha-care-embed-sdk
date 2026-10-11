@@ -60,6 +60,7 @@ describe("browser SehaCareEmbedClient", () => {
       "content-type": "application/json",
       "x-organization-id": "clinic-12",
     });
+    expect(request?.redirect).toBe("error");
     expect(JSON.parse(String(request?.body))).toEqual({
       organizationContext: { appointmentId: "booking-4821", tags: ["returning"] },
       initAgent: "knowledge",

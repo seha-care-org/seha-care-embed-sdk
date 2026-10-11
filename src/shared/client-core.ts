@@ -30,6 +30,7 @@ export async function requestBrowserSession(
     method: "POST",
     cache: "no-store",
     credentials: "same-origin",
+    redirect: "error",
     headers,
     body: JSON.stringify(body),
     signal,
