@@ -2,11 +2,13 @@ export const DEFAULT_SESSION_ENDPOINT = "/api/seha-care/session";
 
 export type EmbeddedAgent = "receptionist" | "triage" | "knowledge";
 export type ArabicDialect = "MAGHREB" | "LEV" | "MSA" | "GLF" | "EGY";
+export type SessionLanguage = "en" | "ar";
 
 export interface StartEmbeddedSessionOptions {
   userIdentity?: string;
   initAgent?: EmbeddedAgent;
   initDialect?: ArabicDialect;
+  language?: SessionLanguage;
   signal?: AbortSignal;
 }
 
@@ -19,6 +21,7 @@ export interface StartEmbeddedSessionRequest {
   userIdentity?: string;
   initAgent?: EmbeddedAgent;
   initDialect?: ArabicDialect;
+  language?: SessionLanguage;
 }
 
 export interface StartEmbeddedSessionResponse {
@@ -39,7 +42,7 @@ export function validateStartSessionOptions(value: unknown): StartEmbeddedSessio
   }
 
   const options = value as Record<string, unknown>;
-  const allowedKeys = new Set(["userIdentity", "initAgent", "initDialect"]);
+  const allowedKeys = new Set(["userIdentity", "initAgent", "initDialect", "language"]);
   for (const key of Object.keys(options)) {
     if (!allowedKeys.has(key)) throw new TypeError(`Unknown session option: ${key}`);
   }
@@ -64,11 +67,15 @@ export function validateStartSessionOptions(value: unknown): StartEmbeddedSessio
   ) {
     throw new TypeError("initDialect is not supported");
   }
+  if (options.language !== undefined && options.language !== "en" && options.language !== "ar") {
+    throw new TypeError("language must be en or ar");
+  }
 
   return {
     ...(options.userIdentity !== undefined ? { userIdentity: options.userIdentity } : {}),
     ...(options.initAgent !== undefined ? { initAgent: options.initAgent } : {}),
     ...(options.initDialect !== undefined ? { initDialect: options.initDialect } : {}),
+    ...(options.language !== undefined ? { language: options.language } : {}),
   } as StartEmbeddedSessionRequest;
 }
 
@@ -163,7 +170,7 @@ function validateBrowserSessionRequest(value: unknown): {
     throw new TypeError("Session options must be an object");
   }
   const options = value as Record<string, unknown>;
-  const optionKeys = ["userIdentity", "initAgent", "initDialect"] as const;
+  const optionKeys = ["userIdentity", "initAgent", "initDialect", "language"] as const;
   const allowedKeys = new Set([...optionKeys, "headers", "body", "signal"]);
   for (const key of Object.keys(options)) {
     if (!allowedKeys.has(key)) throw new TypeError(`Unknown session option: ${key}`);

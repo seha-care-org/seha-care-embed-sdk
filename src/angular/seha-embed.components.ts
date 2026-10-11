@@ -28,6 +28,7 @@ import {
 import type {
   ArabicDialect,
   EmbeddedAgent,
+  SessionLanguage,
   StartEmbeddedSessionRequest,
   StartEmbeddedSessionResponse,
 } from "./session-client.js";
@@ -179,6 +180,7 @@ export class EmbedSessionComponent {
   @Input() userIdentity: string | undefined;
   @Input() initAgent: EmbeddedAgent | undefined;
   @Input() initDialect: ArabicDialect | undefined;
+  @Input() language: SessionLanguage | undefined;
   @Input() labels: Partial<EmbedSessionLabels> = {};
   @Input() className = "";
   @Input() iframeTitle = "Seha Care consultation";
@@ -241,6 +243,7 @@ export class EmbedSessionComponent {
             : {}),
         ...(this.initAgent ? { initAgent: this.initAgent } : {}),
         ...(this.initDialect ? { initDialect: this.initDialect } : {}),
+        ...(this.language !== undefined ? { language: this.language } : {}),
       };
       const endpoint = createSameOriginEndpoint(
         this.sessionEndpoint,

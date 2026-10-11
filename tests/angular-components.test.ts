@@ -36,6 +36,7 @@ describe("Angular embed components", () => {
     const component = fixture.componentInstance;
     fixture.componentRef.setInput("initAgent", "knowledge");
     fixture.componentRef.setInput("initDialect", "LEV");
+    fixture.componentRef.setInput("language", "ar");
     fixture.componentRef.setInput("sessionHeaders", { "X-Organization-Id": "clinic-12" });
     fixture.componentRef.setInput("sessionBody", { organizationContext: { bookingId: "booking-4821" } });
     fixture.componentRef.setInput("labels", { heading: "Start a consultation" });
@@ -70,6 +71,7 @@ describe("Angular embed components", () => {
           userIdentity: "Demo visitor",
           initAgent: "knowledge",
           initDialect: "LEV",
+          language: "ar",
         }),
       }),
     );
@@ -82,6 +84,22 @@ describe("Angular embed components", () => {
     expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
     expect(iframe).toHaveStyle({ width: "100%", height: "100%" });
     expect(fixture.nativeElement.firstElementChild).toHaveClass("host-widget");
+  });
+
+  it("rejects an unsupported language before fetching", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetchMock);
+    fixture.componentRef.setInput("language", "EN");
+
+    await fixture.componentInstance.handleSubmit(
+      new Event("submit", { cancelable: true }),
+    );
+    fixture.detectChanges();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
+      "Could not start the session. Please try again.",
+    );
   });
 
   it("blocks duplicate submits and announces loading", async () => {
