@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Seha Care consultation</title>
     <style>
-      body { max-width: 46rem; margin: 3rem auto; padding: 0 1rem; font-family: system-ui, sans-serif; }
+      body { margin: 0; padding: 0 1rem 3rem; font-family: system-ui, sans-serif; }
+      main { width: min(100%, 66.25rem); margin: 3rem auto 0; }
       form { display: grid; gap: 1rem; max-width: 30rem; }
       input, button { padding: .75rem; font: inherit; }
-      iframe { display: block; width: 100%; height: min(78vh, 56rem); min-height: 32rem; border: 0; }
+      .consultation-frame-shell { container: consultation / inline-size; width: 100%; max-width: 66.25rem; margin: 1.5rem auto 0; }
+      iframe { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; border: 0; border-radius: 1rem; }
+      @container consultation (min-width: 48rem) { iframe { aspect-ratio: 4 / 3; border-radius: 1.25rem; } }
+      iframe[hidden] { display: none; }
       [role="alert"] { color: #a52828; }
     </style>
   </head>
@@ -22,7 +26,9 @@
         <p id="status" role="status" aria-live="polite"></p>
         <p id="error" role="alert" hidden></p>
       </form>
-      <iframe id="consultation-frame" title="Seha Care consultation" allow="camera; microphone; autoplay" referrerpolicy="no-referrer" hidden></iframe>
+      <div class="consultation-frame-shell">
+        <iframe id="consultation-frame" title="Seha Care consultation" allow="camera; microphone; autoplay" referrerpolicy="no-referrer" hidden></iframe>
+      </div>
     </main>
     <script type="module">
       import { SehaCareEmbedClient } from "/sdk/client/index.js";

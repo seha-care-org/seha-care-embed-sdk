@@ -7,7 +7,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
-main { width: min(100% - 2rem, 54rem); margin: 3rem auto; }
+main { width: min(100% - 2rem, 66.25rem); margin: 3rem auto; }
 h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
 section { margin-block: 2rem; padding: 1.25rem; border: 1px solid #d9e5e0; border-radius: 1rem; background: white; }
-.consultation { width: 100%; min-height: 33rem; }
+.consultation { width: 100%; min-width: 0; }
