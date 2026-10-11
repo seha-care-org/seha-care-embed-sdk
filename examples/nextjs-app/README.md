@@ -20,6 +20,8 @@ Copy-Item .env.example .env
 
 Set `SEHA_API_BASE_URL` to the Seha Care **frontend** origin and put the tenant key in `SEHA_TENANT_API_KEY`. These are server environment variables. Never prefix them with `NEXT_PUBLIC_`.
 
+The example enables the SDK package in `transpilePackages` and uses Next.js's Webpack compiler for both development and production builds. This is required for Next.js to register the SDK's closure-bound Server Action from its package module.
+
 Run the development server:
 
 ```powershell
@@ -27,6 +29,8 @@ npm run dev
 ```
 
 Open <http://localhost:4199>. The page has a public visitor flow and a second component with the example cookie authorization action. Without `consultation_access=allowed`, that hook blocks session creation.
+
+The page also demonstrates the custom metadata mode. `app/api/seha-care/session/route.ts` reads the `x-organization-context` header and the `organizationContext` JSON field, checks authorization on every request, and passes only validated session options to Seha Care. The SDK sends this same-origin request only when the visitor submits the form. Custom metadata mode requires `sessionEndpoint` and cannot be combined with `beforeStartAction`.
 
 When a session URL already exists, the same entry point re-exports the URL-only iframe component:
 
@@ -51,6 +55,8 @@ The browser check starts a local mock Seha endpoint and uses a synthetic key to 
 - rendering does not create a session;
 - submitting creates one session, and the browser receives no tenant key;
 - the authorization hook blocks a request before it reaches the mock endpoint;
+- the custom metadata Route Handler denies direct and malformed requests before contacting the mock endpoint;
+- an authorized custom metadata request reaches the Route Handler with its header and JSON fields;
 - an authorized request succeeds; and
 - the rendered page and browser responses do not contain the synthetic key.
 
@@ -64,7 +70,7 @@ npm run test:integration:dev
 For production, first build, then run the production check:
 
 ```powershell
-npm run build
+npm run build:integration
 npm run check:bundle
 npm run test:integration
 ```
