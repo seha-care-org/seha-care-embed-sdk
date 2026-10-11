@@ -7,7 +7,7 @@
 | Environment | Integration |
 | --- | --- |
 | Next.js App Router | Import `EmbedSession` from `@seha-care/embed-sdk/nextjs`. Its Server Action reads the tenant key on the server; the session starts only after submit. |
-| React SPA or Angular | Use the managed component and expose `/api/seha-care/session` from your backend. The browser sends only session options to that same-origin endpoint. |
+| React SPA or Angular | Use the managed component and expose `/api/seha-care/session` from your backend. The browser sends session options and any organization-specific request data to that same-origin endpoint. |
 | Existing session URL | Render `EmbedSessionFrame` from the React or Next.js entry, or `EmbedSessionFrameComponent` from the Angular entry. |
 | Node.js, Express, NestJS | Import `SehaCareEmbedClient` from `@seha-care/embed-sdk/server`. |
 | Other backend language | Make the same server-to-server HTTP request described below. |
@@ -83,7 +83,7 @@ For an existing session link, the Next.js entry also exports `EmbedSessionFrame`
 
 ## React or Angular: host a server endpoint
 
-The managed browser components call the host application at `POST /api/seha-care/session` by default. A custom **same-origin** endpoint can be passed as `sessionEndpoint`. The endpoint accepts a JSON object of session options and returns `{ "sessionUrl": "https://…" }` with caching disabled.
+The managed browser components call the host application at `POST /api/seha-care/session` by default. A custom **same-origin** endpoint can be passed as `sessionEndpoint`. The endpoint accepts a JSON object of session options and optional organization fields, plus custom request headers, and returns `{ "sessionUrl": "https://…" }` with caching disabled. Custom body fields are merged alongside `userIdentity`, `initAgent`, and `initDialect`. Those three fields are reserved for the SDK session options and cannot be overridden through `sessionBody`.
 
 The server endpoint should validate the request body, call the server client, and return only the session URL. For Express:
 
@@ -98,11 +98,25 @@ import {
 const app = express();
 app.use(express.json({ limit: "8kb" }));
 
+function sessionOptionsFrom(value: unknown) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Session request must be an object");
+  }
+  const { userIdentity, initAgent, initDialect } = value as Record<string, unknown>;
+  return validateStartSessionOptions({ userIdentity, initAgent, initDialect });
+}
+
 app.post("/api/seha-care/session", async (request, response) => {
   response.setHeader("Cache-Control", "no-store");
+
+  // Read organization-specific values from the incoming browser request.
+  const organizationHeader = request.get("x-organization-context");
+  const organizationBody = request.body?.organizationContext;
+  // Validate and use these values in your organization's own logic here.
+
   let options;
   try {
-    options = validateStartSessionOptions(request.body);
+    options = sessionOptionsFrom(request.body);
   } catch {
     response.status(400).json({ error: "Invalid session options" });
     return;
@@ -120,6 +134,8 @@ app.post("/api/seha-care/session", async (request, response) => {
 });
 ```
 
+The values are available on the organization server's incoming request. In Express, read a header with `request.get("x-organization-context")` and a custom body field with `request.body.organizationContext`, as shown above. In NestJS, use `@Headers("x-organization-context")` and access `organizationContext` on the object received by `@Body()`. In a plain Node handler, use the lower-case `request.headers["x-organization-context"]` and read `organizationContext` from the parsed JSON object. Validate these values before using them for organization-specific authorization or business logic. The server client sends only the validated session options to Seha Care.
+
 Keep `SEHA_API_BASE_URL` and `SEHA_TENANT_API_KEY` in server-only configuration. Add your normal authentication and abuse controls to public endpoints; Seha Care tenant and session limits also apply.
 
 ### React
@@ -128,7 +144,14 @@ Keep `SEHA_API_BASE_URL` and `SEHA_TENANT_API_KEY` in server-only configuration.
 import { EmbedSession, EmbedSessionFrame } from "@seha-care/embed-sdk/react";
 
 export function Consultation() {
-  return <EmbedSession initAgent="knowledge" initDialect="EGY" />;
+  return (
+    <EmbedSession
+      initAgent="knowledge"
+      initDialect="EGY"
+      sessionHeaders={{ "x-organization-context": "clinic-12" }}
+      sessionBody={{ organizationContext: { bookingId: "booking-4821" } }}
+    />
+  );
 }
 
 export function ExistingSession({ sessionUrl }: { sessionUrl: string }) {
@@ -167,7 +190,7 @@ export class ConsultationComponent {
 }
 ```
 
-`EmbedSessionComponent` supports `sessionEndpoint`, `userIdentity`, `initAgent`, `initDialect`, translated `labels`, CSS class and style inputs, iframe title/permissions/id/styles, and `sessionStarted`/`sessionError` outputs. The iframe component checks the URL before marking it safe for the browser.
+`EmbedSessionComponent` supports `sessionEndpoint`, `sessionHeaders`, `sessionBody`, `userIdentity`, `initAgent`, `initDialect`, translated `labels`, CSS class and style inputs, iframe title/permissions/id/styles, and `sessionStarted`/`sessionError` outputs. For example, bind `[sessionHeaders]="{ 'x-organization-context': 'clinic-12' }"` and `[sessionBody]="{ organizationContext: { bookingId: 'booking-4821' } }"`. The iframe component checks the URL before marking it safe for the browser.
 
 ## Server client and HTTP contract
 
@@ -202,6 +225,21 @@ Session options are optional:
 | `signal` | `AbortSignal` | Optional local request cancellation. |
 
 The browser `SehaCareEmbedClient` has no tenant-key argument. It sends only validated options to the host endpoint, uses same-origin credentials, and disables caching. Do not add permissive CORS or a tenant key to browser code to work around a missing host endpoint.
+
+The browser client also accepts host-endpoint-specific `headers` and `body` values:
+
+```ts
+import { SehaCareEmbedClient } from "@seha-care/embed-sdk/client";
+
+const client = new SehaCareEmbedClient();
+const { sessionUrl } = await client.startSession({
+  initAgent: "receptionist",
+  headers: { "x-organization-context": "clinic-12" },
+  body: { organizationContext: { bookingId: "booking-4821" } },
+});
+```
+
+These values go to your own `/api/seha-care/session` endpoint. Do not put secrets in browser-supplied headers or body fields. Validate organization data on your server and pass only supported session options to `SehaCareEmbedClient`.
 
 ## Security and display
 
