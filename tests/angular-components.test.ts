@@ -82,7 +82,7 @@ describe("Angular embed components", () => {
     expect(iframe).toHaveAttribute("title", "Seha Care consultation");
     expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay");
     expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
-    expect(iframe).toHaveStyle({ width: "100%", height: "100%" });
+    expect(iframe).toHaveStyle({ width: "100%", height: "auto" });
     expect(fixture.nativeElement.firstElementChild).toHaveClass("host-widget");
   });
 
