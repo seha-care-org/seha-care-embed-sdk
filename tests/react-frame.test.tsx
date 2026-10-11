@@ -9,6 +9,7 @@ describe("EmbedSessionFrame", () => {
     render(<EmbedSessionFrame sessionUrl={sessionUrl} />);
 
     const iframe = screen.getByTitle("Seha Care consultation");
+    expect(iframe.parentElement).toHaveClass("seha-embed-session-frame-shell");
     expect(iframe).toHaveAttribute("src", sessionUrl);
     expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay");
     expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
@@ -16,7 +17,7 @@ describe("EmbedSessionFrame", () => {
     expect(iframe).toHaveStyle({
       display: "block",
       width: "100%",
-      height: "100%",
+      height: "auto",
       borderWidth: "0px",
       borderStyle: "none",
     });
@@ -32,7 +33,7 @@ describe("EmbedSessionFrame", () => {
         allow="camera; microphone; display-capture; autoplay; fullscreen"
         allowFullScreen
         className="telehealth-frame"
-        style={{ minHeight: 640 }}
+        style={{ minHeight: 640, aspectRatio: "1 / 1" }}
         onLoad={onLoad}
       />,
     );
@@ -47,7 +48,7 @@ describe("EmbedSessionFrame", () => {
     );
     expect(iframe).toHaveAttribute("allowfullscreen");
     expect(iframe).toHaveClass("telehealth-frame");
-    expect(iframe).toHaveStyle({ width: "100%", minHeight: "640px" });
+    expect(iframe).toHaveStyle({ width: "100%", minHeight: "640px", aspectRatio: "1 / 1" });
     expect(onLoad).toHaveBeenCalledOnce();
   });
 

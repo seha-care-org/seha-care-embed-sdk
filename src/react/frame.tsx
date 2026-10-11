@@ -15,7 +15,7 @@ const DEFAULT_ALLOW = "camera; microphone; autoplay";
 const DEFAULT_STYLE: CSSProperties = {
   display: "block",
   width: "100%",
-  height: "100%",
+  height: "auto",
   borderWidth: 0,
   borderStyle: "none",
 };
@@ -32,16 +32,18 @@ export function EmbedSessionFrame({
   assertHttpUrl(sessionUrl);
 
   return (
-    <iframe
-      {...iframeProps}
-      src={sessionUrl}
-      title={title}
-      allow={allow}
-      referrerPolicy="no-referrer"
-      loading={loading}
-      className={className}
-      style={{ ...DEFAULT_STYLE, ...style }}
-    />
+    <div className="seha-embed-session-frame-shell">
+      <iframe
+        {...iframeProps}
+        src={sessionUrl}
+        title={title}
+        allow={allow}
+        referrerPolicy="no-referrer"
+        loading={loading}
+        className={className}
+        style={{ ...DEFAULT_STYLE, ...style }}
+      />
+    </div>
   );
 }
 

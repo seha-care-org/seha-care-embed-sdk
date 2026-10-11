@@ -122,19 +122,33 @@
 .seha-embed-session--active {
   width: 100%;
   max-width: 66.25rem;
-  height: min(76vh, 51.25rem);
-  min-height: 33.75rem;
+  margin-inline: auto;
   padding: 0;
-  overflow: hidden;
-  border-radius: 1.25rem;
-  background: #fff;
+  border: 0;
+  background: transparent;
+}
+
+.seha-embed-session-frame-shell {
+  container: seha-embed-session / inline-size;
+  width: 100%;
+  max-width: 66.25rem;
+  margin-inline: auto;
 }
 
 .seha-embed-session__frame {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
   border: 0;
+  border-radius: 1rem;
+}
+
+@container seha-embed-session (min-width: 48rem) {
+  .seha-embed-session__frame {
+    aspect-ratio: 4 / 3;
+    border-radius: 1.25rem;
+  }
 }
 
 @media (max-width: 35rem) {
@@ -143,12 +157,6 @@
     border-radius: 1.25rem;
   }
 
-  .seha-embed-session--active {
-    height: 72vh;
-    min-height: 33.75rem;
-    padding: 0;
-    border-radius: 1rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
