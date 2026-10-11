@@ -1,7 +1,18 @@
+import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
-const directory = join(process.cwd(), ".next", "static");
+const exampleDirectory = process.cwd();
+const buildDirectory = process.env.SEHA_NEXT_BUILD_DIR ?? (
+  existsSync(join(exampleDirectory, ".next-sdk-integration"))
+    ? ".next-sdk-integration"
+    : ".next"
+);
+const directory = join(
+  exampleDirectory,
+  buildDirectory,
+  "static",
+);
 const key = process.env.SEHA_TENANT_API_KEY;
 const apiBaseUrl = process.env.SEHA_API_BASE_URL;
 
