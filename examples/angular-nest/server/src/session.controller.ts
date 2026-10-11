@@ -15,7 +15,7 @@ import {
 } from "@seha-care/embed-sdk/server";
 import type { StartEmbeddedSessionRequest } from "@seha-care/embed-sdk/server";
 
-@Controller("api/seha")
+@Controller("api/seha-care")
 export class SessionController {
   @Post("session")
   @HttpCode(201)
