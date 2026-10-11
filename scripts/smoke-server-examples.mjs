@@ -91,6 +91,14 @@ async function smokeExample(name, relativeDirectory, entryFile, args = []) {
     assert.equal(invalid.status, 400, `${name} should reject invalid options`);
     assert.equal(upstreamCalls, 0, `${name} must validate before calling Seha Care`);
 
+    const invalidLanguage = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ language: "EN" }),
+    });
+    assert.equal(invalidLanguage.status, 400, `${name} should reject invalid language`);
+    assert.equal(upstreamCalls, 0, `${name} must validate language before calling Seha Care`);
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -100,6 +108,7 @@ async function smokeExample(name, relativeDirectory, entryFile, args = []) {
       body: JSON.stringify({
         initAgent: "knowledge",
         initDialect: "EGY",
+        language: "ar",
         organizationContext: { bookingId: "booking-4821", flags: ["returning"] },
       }),
     });
@@ -107,7 +116,11 @@ async function smokeExample(name, relativeDirectory, entryFile, args = []) {
     assert.match(response.headers.get("cache-control") ?? "", /no-store/i);
     assert.deepEqual(await response.json(), { sessionUrl });
     assert.equal(upstreamCalls, 1, `${name} should make exactly one authorized upstream request`);
-    assert.deepEqual(upstreamRequests[0]?.body, { initAgent: "knowledge", initDialect: "EGY" });
+    assert.deepEqual(upstreamRequests[0]?.body, {
+      initAgent: "knowledge",
+      initDialect: "EGY",
+      language: "ar",
+    });
     assert.equal(
       upstreamRequests[0]?.headers["x-organization-context"],
       undefined,

@@ -47,6 +47,6 @@ function validateSessionRequest(value: unknown): StartEmbeddedSessionRequest {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new TypeError("Session request must be an object");
   }
-  const { userIdentity, initAgent, initDialect } = value as Record<string, unknown>;
-  return validateStartSessionOptions({ userIdentity, initAgent, initDialect });
+  const { userIdentity, initAgent, initDialect, language } = value as Record<string, unknown>;
+  return validateStartSessionOptions({ userIdentity, initAgent, initDialect, language });
 }

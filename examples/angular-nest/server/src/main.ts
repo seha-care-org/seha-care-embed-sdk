@@ -11,6 +11,7 @@ async function bootstrap(): Promise<void> {
   }
   const app = await NestFactory.create(AppModule, { logger: ["error", "warn"] });
   await app.listen(port, "127.0.0.1");
+  console.log(`NestJS server is running at http://127.0.0.1:${port}`);
 }
 
 void bootstrap();

@@ -87,12 +87,14 @@ const port = Number(process.env.PORT ?? "4177");
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new TypeError("PORT must be a valid TCP port");
 }
-server.listen(port, "127.0.0.1");
+server.listen(port, "127.0.0.1", () => {
+  console.log(`Plain Node.js server is running at http://127.0.0.1:${port}`);
+});
 
 function validateSessionRequest(value) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new TypeError("Session request must be an object");
   }
-  const { userIdentity, initAgent, initDialect } = value;
-  return validateStartSessionOptions({ userIdentity, initAgent, initDialect });
+  const { userIdentity, initAgent, initDialect, language } = value;
+  return validateStartSessionOptions({ userIdentity, initAgent, initDialect, language });
 }
