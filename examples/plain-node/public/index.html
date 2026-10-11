@@ -9,10 +9,16 @@
       main { width: min(100%, 66.25rem); margin: 3rem auto 0; }
       form { display: grid; gap: 1rem; max-width: 30rem; }
       input, button { padding: .75rem; font: inherit; }
-      .consultation-frame-shell { container: consultation / inline-size; width: 100%; max-width: 66.25rem; margin: 1.5rem auto 0; }
+      .consultation-frame-shell { container: consultation / inline-size; position: relative; width: 100%; max-width: 66.25rem; margin: 1.5rem auto 0; }
       iframe { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; border: 0; border-radius: 1rem; }
       @container consultation (min-width: 48rem) { iframe { aspect-ratio: 4 / 3; border-radius: 1.25rem; } }
       iframe[hidden] { display: none; }
+      .fullscreen-button { position: absolute; z-index: 2; inset-block-start: .75rem; inset-inline-end: .75rem; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; padding: 0; border: 1px solid rgb(255 255 255 / 62%); border-radius: .75rem; background: rgb(14 31 29 / 82%); color: #fff; font: inherit; font-size: 1.625rem; line-height: 1; cursor: pointer; backdrop-filter: blur(.5rem); }
+      .fullscreen-button:hover { background: rgb(14 31 29 / 96%); }
+      .fullscreen-button:focus-visible { outline: 3px solid #58c7a8; outline-offset: 3px; }
+      .fullscreen-button[hidden] { display: none; }
+      .consultation-frame-shell--fullscreen-fallback, .consultation-frame-shell:fullscreen { position: fixed !important; z-index: 2147483647; inset: 0 !important; width: 100vw !important; max-width: none !important; height: 100vh !important; height: 100dvh !important; margin: 0 !important; overflow: auto; background: #000; }
+      .consultation-frame-shell--fullscreen-fallback iframe, .consultation-frame-shell:fullscreen iframe { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; border-radius: 0 !important; }
       [role="alert"] { color: #a52828; }
     </style>
   </head>
@@ -27,7 +33,8 @@
         <p id="error" role="alert" hidden></p>
       </form>
       <div class="consultation-frame-shell">
-        <iframe id="consultation-frame" title="Seha Care consultation" allow="camera; microphone; autoplay" referrerpolicy="no-referrer" hidden></iframe>
+        <iframe id="consultation-frame" title="Seha Care consultation" allow="camera; microphone; autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer" hidden></iframe>
+        <button id="fullscreen-button" class="fullscreen-button" type="button" aria-label="Expand consultation to full screen" aria-pressed="false" title="Expand consultation to full screen" hidden><span aria-hidden="true">⛶</span></button>
       </div>
     </main>
     <script type="module">
@@ -39,7 +46,49 @@
       const status = document.querySelector("#status");
       const error = document.querySelector("#error");
       const frame = document.querySelector("#consultation-frame");
+      const frameShell = document.querySelector(".consultation-frame-shell");
+      const fullscreenButton = document.querySelector("#fullscreen-button");
       const client = new SehaCareEmbedClient();
+
+      const syncFullscreenButton = () => {
+        const isFullscreen = document.fullscreenElement === frameShell ||
+          frameShell.classList.contains("consultation-frame-shell--fullscreen-fallback");
+        fullscreenButton.setAttribute("aria-pressed", String(isFullscreen));
+        fullscreenButton.setAttribute("aria-label", isFullscreen ? "Exit full screen" : "Expand consultation to full screen");
+        fullscreenButton.title = isFullscreen ? "Exit full screen" : "Expand consultation to full screen";
+        fullscreenButton.firstElementChild.textContent = isFullscreen ? "×" : "⛶";
+      };
+
+      document.addEventListener("fullscreenchange", syncFullscreenButton);
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !frameShell.classList.contains("consultation-frame-shell--fullscreen-fallback")) return;
+        frameShell.classList.remove("consultation-frame-shell--fullscreen-fallback");
+        syncFullscreenButton();
+        fullscreenButton.focus();
+      });
+
+      fullscreenButton.addEventListener("click", async () => {
+        if (document.fullscreenElement === frameShell) {
+          await document.exitFullscreen().catch(() => undefined);
+          return;
+        }
+        if (frameShell.classList.contains("consultation-frame-shell--fullscreen-fallback")) {
+          frameShell.classList.remove("consultation-frame-shell--fullscreen-fallback");
+          syncFullscreenButton();
+          fullscreenButton.focus();
+          return;
+        }
+        if (document.fullscreenEnabled && frameShell.requestFullscreen) {
+          try {
+            await frameShell.requestFullscreen();
+            return;
+          } catch {
+            // Use the viewport-sized fallback on browsers that block native fullscreen.
+          }
+        }
+        frameShell.classList.add("consultation-frame-shell--fullscreen-fallback");
+        syncFullscreenButton();
+      });
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -54,6 +103,7 @@
           );
           frame.src = sessionUrl;
           frame.hidden = false;
+          fullscreenButton.hidden = false;
           form.hidden = true;
         } catch {
           status.textContent = "";
