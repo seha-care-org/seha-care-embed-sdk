@@ -18,6 +18,7 @@ describe("EmbedSession", () => {
       <EmbedSession
         initAgent="triage"
         initDialect="EGY"
+        language="ar"
         sessionHeaders={{ "X-Organization-Id": "clinic-12" }}
         sessionBody={{ organizationContext: { bookingId: "booking-4821" } }}
         labels={{ heading: "Start care", userIdentityLabel: "Your name" }}
@@ -59,6 +60,7 @@ describe("EmbedSession", () => {
           userIdentity: "Demo visitor",
           initAgent: "triage",
           initDialect: "EGY",
+          language: "ar",
         }),
       }),
     );
@@ -107,11 +109,11 @@ describe("EmbedSession", () => {
     const fetchMock = vi.fn<typeof fetch>();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<EmbedSession startSession={serverAction} initAgent="knowledge" />);
+    render(<EmbedSession startSession={serverAction} initAgent="knowledge" language="en" />);
     fireEvent.click(screen.getByRole("button", { name: "Start session" }));
 
     await screen.findByTitle("Seha Care consultation");
-    expect(serverAction).toHaveBeenCalledWith({ initAgent: "knowledge" });
+    expect(serverAction).toHaveBeenCalledWith({ initAgent: "knowledge", language: "en" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

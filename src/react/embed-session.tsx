@@ -12,6 +12,7 @@ import {
   SehaCareEmbedClient,
   type ArabicDialect,
   type EmbeddedAgent,
+  type SessionLanguage,
 } from "../client/index.js";
 import { EmbedSessionFrame, type EmbedSessionFrameProps } from "./frame.js";
 import type {
@@ -41,6 +42,7 @@ export interface EmbedSessionProps {
   userIdentity?: string;
   initAgent?: EmbeddedAgent;
   initDialect?: ArabicDialect;
+  language?: SessionLanguage;
   labels?: Partial<EmbedSessionLabels>;
   className?: string;
   style?: CSSProperties;
@@ -69,6 +71,7 @@ export function EmbedSession({
   userIdentity,
   initAgent,
   initDialect,
+  language,
   labels,
   className,
   style,
@@ -120,6 +123,7 @@ export function EmbedSession({
             : {}),
         ...(initAgent ? { initAgent } : {}),
         ...(initDialect ? { initDialect } : {}),
+        ...(language !== undefined ? { language } : {}),
       };
       result = startSessionAction
         ? await startSessionAction(options)
