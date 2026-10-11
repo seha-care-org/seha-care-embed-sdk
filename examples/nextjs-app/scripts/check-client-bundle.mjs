@@ -1,18 +1,8 @@
-import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const exampleDirectory = process.cwd();
-const buildDirectory = process.env.SEHA_NEXT_BUILD_DIR ?? (
-  existsSync(join(exampleDirectory, ".next-sdk-integration"))
-    ? ".next-sdk-integration"
-    : ".next"
-);
-const directory = join(
-  exampleDirectory,
-  buildDirectory,
-  "static",
-);
+const directory = join(exampleDirectory, ".next", "static");
 const key = process.env.SEHA_TENANT_API_KEY;
 
 async function inspect(path) {

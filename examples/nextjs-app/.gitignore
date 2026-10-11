@@ -3,6 +3,3 @@ node_modules/
 .env
 .env.*
 !.env.example
-playwright-report/
-test-results/
-.next-sdk-integration/
