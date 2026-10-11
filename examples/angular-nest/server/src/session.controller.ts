@@ -1,19 +1,19 @@
 import {
   BadGatewayException,
   BadRequestException,
+  Body,
   Controller,
   Header,
-  HttpException,
   HttpCode,
+  HttpException,
   Post,
-  Body,
 } from "@nestjs/common";
+import type { StartEmbeddedSessionRequest } from "@seha-care/embed-sdk/server";
 import {
   EmbeddedSessionRequestError,
   SehaCareEmbedClient,
   validateStartSessionOptions,
 } from "@seha-care/embed-sdk/server";
-import type { StartEmbeddedSessionRequest } from "@seha-care/embed-sdk/server";
 
 @Controller("api/seha-care")
 export class SessionController {
@@ -30,8 +30,7 @@ export class SessionController {
 
     try {
       const client = new SehaCareEmbedClient(
-        process.env.SEHA_TENANT_API_KEY ?? "",
-        { apiBaseUrl: process.env.SEHA_API_BASE_URL },
+        process.env.SEHA_TENANT_API_KEY ?? ""
       );
       return await client.startSession(options);
     } catch (error) {
