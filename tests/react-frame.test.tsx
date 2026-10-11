@@ -11,7 +11,8 @@ describe("EmbedSessionFrame", () => {
     const iframe = screen.getByTitle("Seha Care consultation");
     expect(iframe.parentElement).toHaveClass("seha-embed-session-frame-shell");
     expect(iframe).toHaveAttribute("src", sessionUrl);
-    expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay");
+    expect(iframe).toHaveAttribute("allow", "camera; microphone; autoplay; fullscreen");
+    expect(iframe).toHaveAttribute("allowfullscreen");
     expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
     expect(iframe).toHaveAttribute("loading", "eager");
     expect(iframe).toHaveStyle({
@@ -21,6 +22,22 @@ describe("EmbedSessionFrame", () => {
       borderWidth: "0px",
       borderStyle: "none",
     });
+  });
+
+  it("expands the frame and provides an accessible exit control", async () => {
+    render(<EmbedSessionFrame sessionUrl={sessionUrl} />);
+
+    const shell = screen.getByTitle("Seha Care consultation").parentElement!;
+    const expandButton = screen.getByRole("button", {
+      name: "Expand consultation to full screen",
+    });
+    fireEvent.click(expandButton);
+
+    const exitButton = await screen.findByRole("button", { name: "Exit full screen" });
+    expect(shell).toHaveClass("seha-embed-session-frame-shell--fullscreen-fallback");
+    expect(exitButton).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(exitButton);
+    expect(shell).not.toHaveClass("seha-embed-session-frame-shell--fullscreen-fallback");
   });
 
   it("supports the host title, dimensions, permissions, and load callback", () => {

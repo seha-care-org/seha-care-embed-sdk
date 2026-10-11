@@ -130,6 +130,7 @@
 
 .seha-embed-session-frame-shell {
   container: seha-embed-session / inline-size;
+  position: relative;
   width: 100%;
   max-width: 66.25rem;
   margin-inline: auto;
@@ -142,6 +143,58 @@
   aspect-ratio: 3 / 4;
   border: 0;
   border-radius: 1rem;
+}
+
+.seha-embed-session__fullscreen-button {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 0.75rem;
+  inset-inline-end: 0.75rem;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 62%);
+  border-radius: 0.75rem;
+  background: rgb(14 31 29 / 82%);
+  color: #fff;
+  font: inherit;
+  font-size: 1.625rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(0.5rem);
+}
+
+.seha-embed-session__fullscreen-button:hover {
+  background: rgb(14 31 29 / 96%);
+}
+
+.seha-embed-session__fullscreen-button:focus-visible {
+  outline: 3px solid #58c7a8;
+  outline-offset: 3px;
+}
+
+.seha-embed-session-frame-shell--fullscreen-fallback,
+.seha-embed-session-frame-shell:fullscreen {
+  position: fixed !important;
+  z-index: 2147483647;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  overflow: auto;
+  background: #000;
+}
+
+.seha-embed-session-frame-shell--fullscreen-fallback .seha-embed-session__frame,
+.seha-embed-session-frame-shell:fullscreen .seha-embed-session__frame {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  border-radius: 0 !important;
 }
 
 @container seha-embed-session (min-width: 48rem) {

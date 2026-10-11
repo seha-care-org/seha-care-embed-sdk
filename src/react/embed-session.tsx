@@ -30,6 +30,8 @@ export interface EmbedSessionLabels {
   startingButton: string;
   loadingStatus: string;
   errorMessage: string;
+  expandFullscreenButton: string;
+  exitFullscreenButton: string;
 }
 
 export interface EmbedSessionProps {
@@ -61,6 +63,8 @@ const DEFAULT_LABELS: EmbedSessionLabels = {
   startingButton: "Starting session…",
   loadingStatus: "Creating your private session link…",
   errorMessage: "Could not start the session. Please try again.",
+  expandFullscreenButton: "Expand consultation to full screen",
+  exitFullscreenButton: "Exit full screen",
 };
 
 export function EmbedSession({
@@ -164,6 +168,8 @@ export function EmbedSession({
     const {
       className: iframeClassName,
       style: iframeStyle,
+      expandFullscreenLabel,
+      exitFullscreenLabel,
       ...restIframeProps
     } = iframeProps ?? {};
 
@@ -172,10 +178,12 @@ export function EmbedSession({
         <EmbedSessionFrame
           {...restIframeProps}
           sessionUrl={sessionUrl}
-          className={["seha-embed-session__frame", iframeClassName ?? ""]
-            .filter(Boolean)
-            .join(" ")}
+          className={iframeClassName}
           style={iframeStyle}
+          expandFullscreenLabel={
+            expandFullscreenLabel ?? resolvedLabels.expandFullscreenButton
+          }
+          exitFullscreenLabel={exitFullscreenLabel ?? resolvedLabels.exitFullscreenButton}
         />
       </div>
     );

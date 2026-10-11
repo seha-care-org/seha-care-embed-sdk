@@ -1,4 +1,5 @@
 import type { CSSProperties, IframeHTMLAttributes } from "react";
+import { EmbedFullscreenButton } from "./fullscreen-button.js";
 
 export interface EmbedSessionFrameProps
   extends Omit<
@@ -7,11 +8,13 @@ export interface EmbedSessionFrameProps
   > {
   sessionUrl: string;
   title?: string;
-  /** Replace the default camera, microphone, and autoplay permissions. */
+  /** Replace the default camera, microphone, autoplay, and fullscreen permissions. */
   allow?: string;
+  expandFullscreenLabel?: string;
+  exitFullscreenLabel?: string;
 }
 
-const DEFAULT_ALLOW = "camera; microphone; autoplay";
+const DEFAULT_ALLOW = "camera; microphone; autoplay; fullscreen";
 const DEFAULT_STYLE: CSSProperties = {
   display: "block",
   width: "100%",
@@ -27,6 +30,9 @@ export function EmbedSessionFrame({
   className,
   style,
   loading = "eager",
+  allowFullScreen = true,
+  expandFullscreenLabel = "Expand consultation to full screen",
+  exitFullscreenLabel = "Exit full screen",
   ...iframeProps
 }: EmbedSessionFrameProps) {
   assertHttpUrl(sessionUrl);
@@ -38,10 +44,17 @@ export function EmbedSessionFrame({
         src={sessionUrl}
         title={title}
         allow={allow}
+        allowFullScreen={allowFullScreen}
         referrerPolicy="no-referrer"
         loading={loading}
-        className={className}
+        className={["seha-embed-session__frame", className ?? ""]
+          .filter(Boolean)
+          .join(" ")}
         style={{ ...DEFAULT_STYLE, ...style }}
+      />
+      <EmbedFullscreenButton
+        expandLabel={expandFullscreenLabel}
+        exitLabel={exitFullscreenLabel}
       />
     </div>
   );
