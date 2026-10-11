@@ -26,6 +26,7 @@ async function smokeExample(name, relativeDirectory, entryFile, args = []) {
   const upstreamPort = await unusedPort();
   const appPort = await unusedPort();
   let upstreamCalls = 0;
+  const upstreamRequests = [];
   const upstream = createServer((request, response) => {
     if (request.method !== "POST" || request.url !== "/api/v1/session/embed/start-session") {
       response.writeHead(404).end();
@@ -36,12 +37,17 @@ async function smokeExample(name, relativeDirectory, entryFile, args = []) {
       return;
     }
     upstreamCalls += 1;
-    request.resume();
-    response.writeHead(201, {
-      "Cache-Control": "no-store",
-      "Content-Type": "application/json",
+    let body = "";
+    request.setEncoding("utf8");
+    request.on("data", (chunk) => { body += chunk; });
+    request.on("end", () => {
+      upstreamRequests.push({ headers: request.headers, body: JSON.parse(body) });
+      response.writeHead(201, {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json",
+      });
+      response.end(JSON.stringify({ sessionUrl }));
     });
-    response.end(JSON.stringify({ sessionUrl }));
   });
   await new Promise((resolveListen, reject) => {
     upstream.once("error", reject);
@@ -87,13 +93,26 @@ async function smokeExample(name, relativeDirectory, entryFile, args = []) {
 
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ initAgent: "knowledge", initDialect: "EGY" }),
+      headers: {
+        "content-type": "application/json",
+        "x-organization-context": "clinic-12",
+      },
+      body: JSON.stringify({
+        initAgent: "knowledge",
+        initDialect: "EGY",
+        organizationContext: { bookingId: "booking-4821", flags: ["returning"] },
+      }),
     });
     assert.equal(response.status, 201, `${name} should return a created session`);
     assert.match(response.headers.get("cache-control") ?? "", /no-store/i);
     assert.deepEqual(await response.json(), { sessionUrl });
     assert.equal(upstreamCalls, 1, `${name} should make exactly one authorized upstream request`);
+    assert.deepEqual(upstreamRequests[0]?.body, { initAgent: "knowledge", initDialect: "EGY" });
+    assert.equal(
+      upstreamRequests[0]?.headers["x-organization-context"],
+      undefined,
+      `${name} must not forward organization headers to Seha Care`,
+    );
     assert.equal(diagnostics.includes(tenantKey), false, `${name} must not log the tenant key`);
     console.log(`${name} server example passed its mocked-session smoke check.`);
   } finally {

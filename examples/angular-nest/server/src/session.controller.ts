@@ -23,7 +23,7 @@ export class SessionController {
   async startSession(@Body() body: unknown) {
     let options: StartEmbeddedSessionRequest;
     try {
-      options = validateStartSessionOptions(body);
+      options = validateSessionRequest(body);
     } catch {
       throw new BadRequestException("Invalid session options");
     }
@@ -41,4 +41,12 @@ export class SessionController {
       throw new BadGatewayException("Could not start the consultation");
     }
   }
+}
+
+function validateSessionRequest(value: unknown): StartEmbeddedSessionRequest {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Session request must be an object");
+  }
+  const { userIdentity, initAgent, initDialect } = value as Record<string, unknown>;
+  return validateStartSessionOptions({ userIdentity, initAgent, initDialect });
 }

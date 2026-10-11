@@ -16,7 +16,7 @@ app.post("/api/seha-care/session", async (request, response) => {
 
   let options: ReturnType<typeof validateStartSessionOptions>;
   try {
-    options = validateStartSessionOptions(request.body);
+    options = validateSessionRequest(request.body);
   } catch {
     response.status(400).json({ error: "Invalid session options" });
     return;
@@ -48,3 +48,11 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 }
 
 app.listen(port, "127.0.0.1");
+
+function validateSessionRequest(value: unknown): ReturnType<typeof validateStartSessionOptions> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Session request must be an object");
+  }
+  const { userIdentity, initAgent, initDialect } = value as Record<string, unknown>;
+  return validateStartSessionOptions({ userIdentity, initAgent, initDialect });
+}

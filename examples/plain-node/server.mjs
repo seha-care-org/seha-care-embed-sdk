@@ -61,7 +61,7 @@ const server = createServer(async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/seha-care/session") {
     let options;
     try {
-      options = validateStartSessionOptions(await readJson(request));
+      options = validateSessionRequest(await readJson(request));
     } catch {
       send(response, 400, { error: "Invalid session options" });
       return;
@@ -88,3 +88,11 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new TypeError("PORT must be a valid TCP port");
 }
 server.listen(port, "127.0.0.1");
+
+function validateSessionRequest(value) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Session request must be an object");
+  }
+  const { userIdentity, initAgent, initDialect } = value;
+  return validateStartSessionOptions({ userIdentity, initAgent, initDialect });
+}
