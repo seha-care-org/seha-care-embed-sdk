@@ -24,7 +24,6 @@ import {
   DEFAULT_SESSION_ENDPOINT,
   EmbeddedSessionRequestError,
   requestBrowserSession,
-  validateStartSessionOptions,
 } from "./session-client.js";
 import type {
   ArabicDialect,
@@ -175,6 +174,8 @@ export class EmbedSessionFrameComponent implements AfterViewInit, OnChanges {
 })
 export class EmbedSessionComponent {
   @Input() sessionEndpoint = DEFAULT_SESSION_ENDPOINT;
+  @Input() sessionHeaders: Record<string, string> = {};
+  @Input() sessionBody: Record<string, unknown> = {};
   @Input() userIdentity: string | undefined;
   @Input() initAgent: EmbeddedAgent | undefined;
   @Input() initDialect: ArabicDialect | undefined;
@@ -241,13 +242,14 @@ export class EmbedSessionComponent {
         ...(this.initAgent ? { initAgent: this.initAgent } : {}),
         ...(this.initDialect ? { initDialect: this.initDialect } : {}),
       };
-      const options = validateStartSessionOptions(requestOptions);
       const endpoint = createSameOriginEndpoint(
         this.sessionEndpoint,
         this.document.location.origin,
       );
       const result: StartEmbeddedSessionResponse = await requestBrowserSession(endpoint, {
-        ...options,
+        ...requestOptions,
+        headers: this.sessionHeaders,
+        body: this.sessionBody,
         signal: controller.signal,
       });
       if (controller.signal.aborted) return;

@@ -10,6 +10,11 @@ export interface StartEmbeddedSessionOptions {
   signal?: AbortSignal;
 }
 
+export interface BrowserStartEmbeddedSessionOptions extends StartEmbeddedSessionOptions {
+  headers?: Record<string, string>;
+  body?: Record<string, unknown>;
+}
+
 export interface StartEmbeddedSessionRequest {
   userIdentity?: string;
   initAgent?: EmbeddedAgent;
@@ -87,15 +92,14 @@ export function createSameOriginEndpoint(value: string, origin: string): string 
 
 export async function requestBrowserSession(
   endpoint: string,
-  options: StartEmbeddedSessionOptions = {},
+  options: BrowserStartEmbeddedSessionOptions = {},
 ): Promise<StartEmbeddedSessionResponse> {
-  const { signal, ...requestOptions } = options;
-  const body = validateStartSessionOptions(requestOptions);
+  const { signal, headers, body } = validateBrowserSessionRequest(options);
   const response = await fetch(endpoint, {
     method: "POST",
     cache: "no-store",
     credentials: "same-origin",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify(body),
     signal,
   });
@@ -147,4 +151,74 @@ export async function requestBrowserSession(
   }
 
   return { sessionUrl: payload.sessionUrl };
+}
+
+function validateBrowserSessionRequest(value: unknown): {
+  headers: Record<string, string>;
+  body: StartEmbeddedSessionRequest & Record<string, unknown>;
+  signal?: AbortSignal;
+} {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Session options must be an object");
+  }
+  const options = value as Record<string, unknown>;
+  const optionKeys = ["userIdentity", "initAgent", "initDialect"] as const;
+  const allowedKeys = new Set([...optionKeys, "headers", "body", "signal"]);
+  for (const key of Object.keys(options)) {
+    if (!allowedKeys.has(key)) throw new TypeError(`Unknown session option: ${key}`);
+  }
+  const sessionOptions = validateStartSessionOptions(
+    Object.fromEntries(optionKeys.flatMap((key) =>
+      options[key] === undefined ? [] : [[key, options[key]]],
+    )),
+  );
+
+  let customBody: Record<string, unknown> = {};
+  if (options.body !== undefined) {
+    if (typeof options.body !== "object" || options.body === null || Array.isArray(options.body)) {
+      throw new TypeError("Session body must be a JSON object");
+    }
+    try {
+      const serialized = JSON.stringify(options.body);
+      if (serialized === undefined) throw new TypeError();
+      const parsed: unknown = JSON.parse(serialized);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        throw new TypeError();
+      }
+      customBody = { ...(parsed as Record<string, unknown>) };
+    } catch {
+      throw new TypeError("Session body must be JSON-serializable");
+    }
+  }
+  for (const key of optionKeys) delete customBody[key];
+
+  const customHeaders = options.headers;
+  if (customHeaders !== undefined &&
+    (typeof customHeaders !== "object" || customHeaders === null || Array.isArray(customHeaders))) {
+    throw new TypeError("Session headers must be an object");
+  }
+  const headers = new Headers();
+  for (const [name, headerValue] of Object.entries(customHeaders ?? {})) {
+    if (typeof headerValue !== "string") {
+      throw new TypeError("Session header values must be strings");
+    }
+    headers.set(name, headerValue);
+  }
+  headers.set("content-type", "application/json");
+  const normalizedHeaders: Record<string, string> = {};
+  headers.forEach((headerValue, name) => { normalizedHeaders[name] = headerValue; });
+
+  const signal = options.signal;
+  if (signal !== undefined &&
+    (typeof signal !== "object" || signal === null ||
+      typeof (signal as AbortSignal).aborted !== "boolean" ||
+      typeof (signal as AbortSignal).addEventListener !== "function")) {
+    throw new TypeError("signal must be an AbortSignal");
+  }
+
+  return {
+    headers: normalizedHeaders,
+    body: { ...customBody, ...sessionOptions },
+    ...(signal !== undefined ? { signal: signal as AbortSignal } : {}),
+  };
 }

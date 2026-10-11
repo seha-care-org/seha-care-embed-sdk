@@ -36,6 +36,8 @@ describe("Angular embed components", () => {
     const component = fixture.componentInstance;
     fixture.componentRef.setInput("initAgent", "knowledge");
     fixture.componentRef.setInput("initDialect", "LEV");
+    fixture.componentRef.setInput("sessionHeaders", { "X-Organization-Id": "clinic-12" });
+    fixture.componentRef.setInput("sessionBody", { organizationContext: { bookingId: "booking-4821" } });
     fixture.componentRef.setInput("labels", { heading: "Start a consultation" });
     fixture.componentRef.setInput("className", "host-widget");
     const started = vi.fn();
@@ -58,8 +60,12 @@ describe("Angular embed components", () => {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-organization-id": "clinic-12",
+        },
         body: JSON.stringify({
+          organizationContext: { bookingId: "booking-4821" },
           userIdentity: "Demo visitor",
           initAgent: "knowledge",
           initDialect: "LEV",
