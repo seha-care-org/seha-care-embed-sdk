@@ -8,7 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     restoreMocks: true,
     clearMocks: true,
-    setupFiles: ["./tests/setup.ts"],
+    setupFiles: ["./tests/setup.ts", "./tests/angular-test-setup.ts"],
     exclude: ["examples/**", "**/node_modules/**", "**/dist/**", "**/coverage/**"],
   },
 });
