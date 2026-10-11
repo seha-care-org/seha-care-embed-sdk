@@ -76,7 +76,6 @@ const app = spawn(
     cwd: exampleDirectory,
     env: {
       ...process.env,
-      SEHA_API_BASE_URL: `http://${host}:${upstreamPort}`,
       SEHA_TENANT_API_KEY: tenantKey,
       SEHA_NEXT_BUILD_DIR: ".next-sdk-integration",
     },

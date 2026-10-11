@@ -18,7 +18,7 @@ npm install
 Copy-Item .env.example .env
 ```
 
-Set `SEHA_API_BASE_URL` to the Seha Care **frontend** origin and put the tenant key in `SEHA_TENANT_API_KEY`. These are server environment variables. Never prefix them with `NEXT_PUBLIC_`.
+Put the tenant key in `SEHA_TENANT_API_KEY`. These are server environment variables. Never prefix them with `NEXT_PUBLIC_`.
 
 The example enables the SDK package in `transpilePackages` and uses Next.js's Webpack compiler for both development and production builds. This is required for Next.js to register the SDK's closure-bound Server Action from its package module.
 
