@@ -58,14 +58,13 @@ const nextConfig = {
 
 ## Next.js: managed component
 
-Set these variables in the Next.js **server** environment:
+Set `SEHA_TENANT_API_KEY` in the Next.js **server** environment. The SDK defaults to `https://demo.seha-care.com`; set `SEHA_API_BASE_URL` only when you need a different Seha Care origin. Do not prefix server variables with `NEXT_PUBLIC_`:
 
 ```dotenv
-SEHA_API_BASE_URL=https://demo.seha-care.com
 SEHA_TENANT_API_KEY=replace-with-your-tenant-key
 ```
 
-Do not prefix these variables with `NEXT_PUBLIC_`. Use the server component in an App Router page:
+Use the server component in an App Router page:
 
 ```tsx
 import { EmbedSession } from "@seha-care/embed-sdk/nextjs";
@@ -258,7 +257,7 @@ const { sessionUrl } = await client.startSession({
 });
 ```
 
-`SEHA_API_BASE_URL` is read from the server environment. It must be the final API HTTP(S) origin, with no path, query, or fragment; the SDK rejects redirects so it never forwards the tenant key to another destination. For dependency-injected configuration, supply an explicit override:
+The server client defaults to `https://demo.seha-care.com`. Set `SEHA_API_BASE_URL` to use a different API HTTP(S) origin, with no path, query, or fragment; the SDK rejects redirects so it never forwards the tenant key to another destination. For dependency-injected configuration, supply an explicit override:
 
 ```ts
 const client = new SehaCareEmbedClient(tenantApiKey, {
