@@ -1,0 +1,232 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_AUDIT: "false"
+
+jobs:
+  workflow:
+    name: Workflow validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Validate GitHub Actions syntax and shell scripts
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}" \
+            --output "$RUNNER_TEMP/$archive"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+
+  sdk:
+    name: SDK / Node ${{ matrix.node }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            node: "22"
+          - os: ubuntu-24.04
+            node: "24"
+            release: true
+          - os: ubuntu-24.04
+            node: "26"
+          - os: windows-2025
+            node: "24"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --engine-strict
+      - name: Check TypeScript
+        run: npm run typecheck
+      - name: Build all SDK entries
+        run: npm run build
+      - name: Run tests
+        if: ${{ !matrix.release }}
+        run: npm run test:ci
+      - name: Run tests with coverage thresholds
+        if: ${{ matrix.release }}
+        run: npm run test:coverage
+      - name: Check ESM and CommonJS exports
+        run: npm run check:server-formats
+      - name: Validate release package
+        if: ${{ matrix.release }}
+        run: npm run check:package
+      - name: Ensure checks did not modify tracked files
+        run: git diff --exit-code
+      - name: Save test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sdk-reports-node-${{ matrix.node }}-${{ matrix.os }}
+          path: |
+            reports/
+            coverage/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Save checked npm package
+        if: ${{ matrix.release }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: npm-package
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  security:
+    name: Dependency security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "24"
+          check-latest: true
+          package-manager-cache: false
+      - name: Audit SDK and every example lockfile, including development dependencies
+        run: |
+          status=0
+          for directory in . examples/react-demo examples/nextjs-app examples/angular-nest/client examples/angular-nest/server examples/plain-node; do
+            echo "Auditing $directory"
+            npm audit --prefix "$directory" --package-lock-only --audit-level=high || status=1
+          done
+          exit "$status"
+
+  package-runtime:
+    name: Package / Node ${{ matrix.node }} / ${{ matrix.os }}
+    needs: sdk
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            node: "20"
+          - os: ubuntu-24.04
+            node: "22"
+          - os: ubuntu-24.04
+            node: "24"
+          - os: ubuntu-24.04
+            node: "26"
+          - os: windows-2025
+            node: "24"
+          - os: macos-15
+            node: "24"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: true
+          package-manager-cache: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: npm-package
+          path: artifacts
+      - name: Test installed tarball without framework dependencies
+        run: npm run check:package-runtime -- artifacts/*.tgz
+
+  examples:
+    name: Integration / ${{ matrix.example }}
+    needs: sdk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [react, angular, nextjs, servers]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "24"
+          check-latest: true
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/**/package-lock.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: npm-package
+          path: artifacts
+      - name: Build and test examples against the checked tarball
+        env:
+          EXAMPLE: ${{ matrix.example }}
+        run: npm run check:examples -- "$EXAMPLE" artifacts/*.tgz
+      - name: Ensure checks did not modify tracked files
+        run: git diff --exit-code
+      - name: Save example test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: example-reports-${{ matrix.example }}
+          path: examples/**/reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  readiness:
+    name: Release readiness
+    if: ${{ always() }}
+    needs: [workflow, sdk, security, package-runtime, examples]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every validation job to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          {
+            echo '### Release readiness'
+            echo '| Gate | Result |'
+            echo '| --- | --- |'
+            echo "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$RESULTS" | jq --exit-status 'all(.[]; .result == "success")'

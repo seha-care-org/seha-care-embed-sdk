@@ -309,9 +309,49 @@ Version `0.1.0` removes the insecure browser key flow. Replace `EmbedSession ten
 From this directory:
 
 ```sh
-npm install
+npm ci
 npm run verify
 npm run pack:check
 ```
 
 Each runnable example has its own setup and build commands in its README. After installing the React, Angular/NestJS, and plain Node examples and building NestJS, `npm run check:server-examples` exercises the Express, NestJS, and plain Node endpoints against a local mock. The React and Angular checks scan browser assets and source maps. The Next.js example provides a production build and client bundle scan. Automated endpoint checks use synthetic credentials and local mocks.
+
+### CI and release readiness
+
+[GitHub Actions CI](.github/workflows/ci.yml) validates pull requests, pushes to any branch or tag, merge queues, manual runs, and a weekly scheduled run. It creates reports and an npm tarball as workflow artifacts. It does not publish packages, create releases, or deploy. No repository secrets are required.
+
+| Gate | Checks |
+| --- | --- |
+| Workflow validation | `actionlint` validates workflow expressions, jobs, and shell scripts. Its download is pinned by version and SHA-256. |
+| SDK | Locked, engine-strict installs; TypeScript; clean builds of all entries; unit tests; ESM/CommonJS exports. Runs on Node 22, 24, and 26 on Linux, plus Node 24 on Windows. |
+| Coverage | Node 24 on Linux enforces 80% lines, statements, and functions, and 75% branches. Angular bundle coverage maps back to the original sources. |
+| Dependency security | Audits the SDK and every example lockfile, including development dependencies. High or critical advisories, or a failed audit request, fail the gate. |
+| Package validation | Checks packaged files, export targets, CSS, source map JSON, React client directives, and Next.js server markers. Saves the tarball, pack metadata, and SHA-256 checksum. |
+| Package runtime | Installs that tarball into an isolated consumer and checks ESM, CommonJS, browser requests, and blocked browser imports of server entries. Checks Node 20, 22, 24, and 26 on Linux, and Node 24 on Windows and macOS. No framework dependencies are installed. |
+| Integrations | React tests and production build; Angular production and development builds; Next.js production build; browser credential scans; Express, NestJS, and plain Node endpoint smoke tests against a local mock. All use the same checked tarball. |
+
+**Use `Release readiness` as the required status check in your GitHub branch protection or ruleset.** It runs after every gate and fails if any required job fails, is cancelled, or is skipped. The workflow has no path filters, so documentation-only changes also report the required result. Configure this repository setting after the first Actions run makes the check available. See [GitHub's required status check guidance](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+
+Actions are pinned to commit hashes, the workflow token has read-only repository permissions, checkout does not retain credentials, and each job has a timeout. [Dependabot](.github/dependabot.yml) checks Actions and npm dependencies weekly; dependency updates still need to pass CI. Scheduled checks catch newly reported advisories even when no code changes.
+
+Download `npm-package` from a successful run to inspect the exact package tested by the integration jobs. Test results are available as JUnit XML; the coverage artifact includes HTML, LCOV, and a JSON summary. Artifacts expire after 14 days. A green result applies to that commit and its tested environments; real Seha Care credentials and production infrastructure are outside these mocked checks. Run release/deployment processes separately against the same validated commit or tarball.
+
+To run the primary release checks locally, use a current Node 24 patch release (at least 24.15.0 for the locked test dependencies):
+
+```sh
+npm ci --engine-strict
+npm run verify:ci
+npm audit --package-lock-only --audit-level=high
+npm run check:package-runtime -- artifacts/seha-care-embed-sdk-0.1.3.tgz
+```
+
+Use the generated tarball filename if the SDK version changes. `verify:ci` builds once, runs tests with coverage, checks server formats, and validates the release tarball. To validate an example against it:
+
+```sh
+npm run check:examples -- react artifacts/seha-care-embed-sdk-0.1.3.tgz
+npm run check:examples -- angular artifacts/seha-care-embed-sdk-0.1.3.tgz
+npm run check:examples -- nextjs artifacts/seha-care-embed-sdk-0.1.3.tgz
+npm run check:examples -- servers artifacts/seha-care-embed-sdk-0.1.3.tgz
+```
+
+These commands install example dependencies and replace local SDK links with the tarball without changing their manifests or lockfiles. Run them sequentially locally because the React and server groups share the Express example directory. GitHub Actions runs each group in its own runner.
