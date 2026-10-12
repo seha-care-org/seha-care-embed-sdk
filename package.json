@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Secure server and browser clients, plus React, Next.js, and Angular components for Seha Care embedded sessions.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seha-care-org/seha-care-embed-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/seha-care-org/seha-care-embed-sdk/issues"
+  },
+  "homepage": "https://github.com/seha-care-org/seha-care-embed-sdk#readme",
   "type": "module",
   "files": [
     "dist",
