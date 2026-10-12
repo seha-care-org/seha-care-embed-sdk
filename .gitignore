@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 reports/
+artifacts/
 .env
 .env.*
 !.env.example

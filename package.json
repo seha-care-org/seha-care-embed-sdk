@@ -89,7 +89,10 @@
     "verify": "npm run typecheck && npm test && npm run check:server-formats",
     "prepack": "npm run build",
     "prepublishOnly": "npm run verify",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "check:package": "node scripts/check-package.mjs",
+    "check:package-runtime": "node scripts/check-package-runtime.mjs",
+    "verify:ci": "npm run typecheck && npm run build && npm run test:coverage && npm run check:server-formats && npm run check:package"
   },
   "devDependencies": {
     "@angular/common": "^21.1.0",
