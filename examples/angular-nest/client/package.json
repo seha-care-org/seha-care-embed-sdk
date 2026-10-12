@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@angular/common": "^21.1.0",
-    "@angular/compiler": "^21.1.0",
+    "@angular/compiler": "^22.2.2",
     "@angular/core": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
     "@seha-care/embed-sdk": "file:../../../",
@@ -18,8 +18,8 @@
     "zone.js": "~0.16.1"
   },
   "devDependencies": {
-    "@angular/build": "^21.1.0",
-    "@angular/cli": "^21.1.0",
+    "@angular/build": "^22.2.2",
+    "@angular/cli": "^22.2.2",
     "@angular/compiler-cli": "^21.1.0",
     "typescript": "~5.9.3"
   }
