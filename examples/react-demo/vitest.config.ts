@@ -5,6 +5,12 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   test: {
+    server: {
+      deps: {
+        // Installed SDK entry points import CSS; let Vite transform them.
+        inline: ["@seha-care/embed-sdk"],
+      },
+    },
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     restoreMocks: true,
