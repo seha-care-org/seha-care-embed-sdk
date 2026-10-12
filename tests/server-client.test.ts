@@ -117,14 +117,33 @@ describe("SehaCareEmbedClient", () => {
       "absolute HTTP or HTTPS origin",
     );
     expect(() => new SehaCareEmbedClient(" ")).toThrow("apiKey must not be empty");
-
-    vi.stubEnv("SEHA_API_BASE_URL", "");
-    expect(() => new SehaCareEmbedClient("test")).toThrow(
-      "SEHA_API_BASE_URL must be configured on the server",
-    );
   });
 
-  it("allows an explicit origin for framework configuration services", async () => {
+  it.each(["unset", "", "   "])(
+    "uses the demo API origin when SEHA_API_BASE_URL is %s",
+    async (baseUrlState) => {
+      if (baseUrlState === "unset") {
+        delete process.env.SEHA_API_BASE_URL;
+      } else {
+        vi.stubEnv("SEHA_API_BASE_URL", baseUrlState);
+      }
+
+      const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+        Response.json({ sessionUrl: "https://app.example.com/en/embed/session/token" }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const client = new SehaCareEmbedClient("tenant-secret-test-value");
+
+      await client.startSession();
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://demo.seha-care.com/api/v1/session/embed/start-session",
+        expect.anything(),
+      );
+    },
+  );
+
+  it("uses an explicit API origin before the environment origin", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn<typeof fetch>().mockResolvedValue(

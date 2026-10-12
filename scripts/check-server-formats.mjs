@@ -17,4 +17,31 @@ for (const Client of [imported.SehaCareEmbedClient, required.SehaCareEmbedClient
   assert.equal(typeof client.startSession, "function");
 }
 
-console.log("/server exports load through both ESM and CommonJS package conditions.");
+const previousBaseUrl = process.env.SEHA_API_BASE_URL;
+const previousFetch = globalThis.fetch;
+const requestedUrls = [];
+delete process.env.SEHA_API_BASE_URL;
+globalThis.fetch = async (input) => {
+  requestedUrls.push(String(input));
+  return Response.json({ sessionUrl: "https://demo.seha-care.com/en/embed/session/token" });
+};
+
+try {
+  for (const Client of [imported.SehaCareEmbedClient, required.SehaCareEmbedClient]) {
+    await new Client("synthetic-format-check-key").startSession();
+  }
+} finally {
+  globalThis.fetch = previousFetch;
+  if (previousBaseUrl === undefined) {
+    delete process.env.SEHA_API_BASE_URL;
+  } else {
+    process.env.SEHA_API_BASE_URL = previousBaseUrl;
+  }
+}
+
+assert.deepEqual(requestedUrls, [
+  "https://demo.seha-care.com/api/v1/session/embed/start-session",
+  "https://demo.seha-care.com/api/v1/session/embed/start-session",
+]);
+
+console.log("/server exports load through ESM and CommonJS and use the default API origin.");

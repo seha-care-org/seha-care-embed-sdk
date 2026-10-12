@@ -6,6 +6,8 @@ import type {
   StartEmbeddedSessionResponse,
 } from "../shared/types.js";
 
+const DEFAULT_API_BASE_URL = "https://demo.seha-care.com";
+
 export { EmbeddedSessionRequestError } from "../shared/client-core.js";
 export { validateStartSessionOptions } from "../shared/client-core.js";
 export type {
@@ -46,7 +48,7 @@ export class SehaCareEmbedClient {
 function readApiBaseUrl(): string {
   const apiBaseUrl = process.env.SEHA_API_BASE_URL;
   if (!apiBaseUrl?.trim()) {
-    throw new TypeError("SEHA_API_BASE_URL must be configured on the server");
+    return DEFAULT_API_BASE_URL;
   }
   return apiBaseUrl;
 }
