@@ -1,6 +1,6 @@
 {
   "name": "@seha-care/embed-sdk",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Secure server and browser clients, plus React, Next.js, and Angular components for Seha Care embedded sessions.",
   "license": "MIT",
   "repository": {
